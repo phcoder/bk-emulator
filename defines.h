@@ -82,6 +82,8 @@ typedef struct _pdp_regs {
 } pdp_regs;
 
 
+extern unsigned int hasexit;
+
 /*
  * Definitions for the memory map and memory operations.
  */

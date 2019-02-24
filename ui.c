@@ -45,6 +45,8 @@ int breakpoint = -1;
 extern int traceflag;
 static char buf[BUFSIZ];
 
+void ui_load(const char *s);
+
 /*
  * ui() - The user interface main loop.
  */
@@ -405,8 +407,7 @@ ui_registers()
  * the parameter is expected to point at <octal number> <file name>
 */
 
-ui_load(s)
-char *s;
+void ui_load(const char *s)
 {
 	int addr = -1, len;
 	d_byte c1, c2;
@@ -423,19 +424,19 @@ char *s;
 		perror(s);
 		return;
 	}
-	c1 = getc(f);
-	c2 = getc(f);
+	c1 = fgetc(f);
+	c2 = fgetc(f);
 	if (-1 == addr)
 	    addr = c2 << 8 | c1;
-	c1 = getc(f);
-	c2 = getc(f);
+	c1 = fgetc(f);
+	c2 = fgetc(f);
 	len = c2 << 8 | c1;
 	fprintf(stderr, _("Reading %s into %06o... "), s, addr);
 	if (addr < 01000) {
 	    fprintf(stderr, _("Possible start addresses:  "));
 	    do {
-		    c1 = getc(f);
-		    c2 = getc(f);
+		    c1 = fgetc(f);
+		    c2 = fgetc(f);
 		    fprintf(stderr, "%06o ", c2 << 8 | c1);
 		    addr += 2;
 		    len -= 2;
@@ -444,8 +445,8 @@ char *s;
 	}
 	/* the file is in little-endian format */
 	while (len > 0 && !feof(f)) {
-		c1 = getc(f);
-		c2 = getc(f);
+		c1 = fgetc(f);
+		c2 = fgetc(f);
 		if (OK != sc_word(addr, c2 << 8 | c1)) {
 		    break;
 		}

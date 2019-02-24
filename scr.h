@@ -17,4 +17,4 @@
 #define White {255,255,255}
 
 extern int horsize, vertsize;
-
+extern void Quit_SDL(void);

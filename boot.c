@@ -148,9 +148,9 @@ boot_init()
 	/* Monitor must be exactly 8k */
 	load_rom(0100000, rompath10, 8192, 8192);
 
-        /* Basic or Focal ROM may be 24448 to 24576 bytes */
-        load_rom(0120000, rompath12, 24448, 24576);
+	/* Basic or Focal ROM may be 24448 to 24576 bytes */
+	load_rom(0120000, rompath12, 24448, 24576);
 
 	/* Disk controller BIOS is exactly 4k */
-        load_rom(0160000, rompath16, 4096, 4096);
+	load_rom(0160000, rompath16, 4096, 4096);
 }
