@@ -16,7 +16,7 @@
 
 /* Why bother, let's memory-map the files! */
 typedef struct {
-	unsigned length;
+	unsigned int length;
 	unsigned short * image;
 	unsigned short * ptr;
 	unsigned char track;
@@ -35,29 +35,64 @@ static int selected = -1;
 
 void do_disk_io(int drive, int blkno, int nwords, int ioaddr);
 
-void disk_open(disk_t * pdt, char * name) {
-	int fd = open(name, O_RDWR|O_BINARY);
-	if (fd == -1) {
+/* Pretty much had to rewrite it for portability rofl. - Gameblabla 
+ * This does not seem to handle writes to the file.
+ * */
+void disk_open(disk_t * pdt, char * name) 
+{
+	FILE* fp;
+	int result;
+	
+	/* First, we check if the file exists. */
+	fp = fopen(name, "rb");
+	if (!fp)
+	{
+		/* It doesn't so let's exit right away. */
+		perror(name);
+		return;
+	}
+	else
+		fclose(fp);
+	
+	fp = fopen(name, "r+b");
+	if (!fp)
+	{
+		/* Open file as Read-only */
+		fp = fopen(name, "rb");
+		if (!fp)
+		{
+			perror(name);
+			return;
+		}
 		pdt->ro = 1;
-		fd = open(name, O_RDONLY|O_BINARY);
 	}
-	if (fd == -1) {
-		perror(name);
-		return;
-	}
-	pdt->length = lseek(fd, 0, SEEK_END);
+	
+	/* Determine size of file*/
+	fseek(fp , 0 , SEEK_END );
+	pdt->length = ftell (fp);
+	fseek(fp , 0 , SEEK_SET );
+	
 	if (pdt->length == -1) perror("seek");
-	if (pdt->length % SECSIZE) {
+	if (pdt->length % SECSIZE) 
+	{
 		fprintf(stderr, _("%s is not an integer number of blocks: %d bytes\n"), name, pdt->length);
-		close(fd);
+		fclose(fp);
 		return;
 	}
-	pdt->image = mmap(0, pdt->length, PROT_READ | (pdt->ro ? 0 : PROT_WRITE), MAP_SHARED, fd, 0);
-	if (pdt->image == MAP_FAILED) {
-		pdt->image = 0;
+	
+	pdt->image = malloc(pdt->length);
+	if (pdt->image == NULL)
+	{
+		fprintf(stderr, _("Unable to malloc. Out of memory ?\n"));
+		fclose(fp);
 		perror(name);
 	}
-	if (pdt->ro) {
+	
+	result = fread (pdt->image, sizeof(unsigned char), pdt->length, fp);
+	if (fp) fclose(fp);
+	
+	if (pdt->ro) 
+	{
 		fprintf(stderr, _("%s will be read only\n"), name);
 	}
 }
@@ -85,10 +120,14 @@ int disk_init() {
 
 void disk_finish() {
 	int i;
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 4; i++) 
+	{
 		if (!disks[i].image)
 			continue;
-		munmap(disks[i].image, disks[i].length);
+		else
+		{
+			if (disks[i].length > 0) free(disks[i].image);
+		}
 	}	
 }
 
