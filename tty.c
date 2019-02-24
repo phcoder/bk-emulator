@@ -52,7 +52,8 @@ flag_t timer_intr_enabled = 0;
 int special_keys[SDLK_LAST], shifted[256];
 
 static tty_pending_int = 0;
-unsigned long pending_interrupts;
+extern unsigned long pending_interrupts;
+
 tty_open()
 {
     int i;
@@ -287,13 +288,38 @@ stop_key() {
     service(04);
 }
 
+/*
+ * 9 Numpad is mapped to 265(Let's pad it to R button, BACKSPACE)
+ * 1 Numpad is mapped to 257 (Pad it to L, TAB)
+
+ * SPACE is mapped to 32
+ * RETURN is mapped to 13
+ * LCTRL : 306
+ * LALT : 308
+*/
+
 static int ar2 = 0;
 tty_keyevent(SDL_Event * pev) {
 	int k, c;
 	k = pev->key.keysym.sym;
+
 	if (SDLK_UNKNOWN == k) {
 	    return;
 	}
+	
+	if (k == SDLK_LCTRL)
+		k = SDLK_RETURN;
+	else if (k == SDLK_LALT)
+		k = SDLK_SPACE;
+	else if (k == SDLK_BACKSPACE)
+		k = 265;
+	else if (k == SDLK_TAB)
+		k = 257;
+	else if (k == SDLK_LSHIFT)
+		k = 259;
+	else if (k == SDLK_SPACE)
+		hasexit = 1;
+		
 	if(pev->type == SDL_KEYUP) {
 	    key_pressed = 0100;
 	    if (special_keys[k] == TTY_AR2) ar2 = 0;
@@ -318,7 +344,7 @@ tty_keyevent(SDL_Event * pev) {
 		return;
 	    case TTY_DOWNLOAD: {
 		char buf[1024];
-		extern ui_load(char *);
+		extern ui_load(const char *);
 		fputs(_("NAME? "), stderr);
 		fgets(buf, 1024, stdin);
 		if (buf[strlen(buf)-1] == '\n') {
