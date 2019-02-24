@@ -4,7 +4,7 @@
 #include <libintl.h>
 #define _(String) gettext (String)
 
-SDL_Surface * screen;
+SDL_Surface * screen, *rl_screen;
 flag_t cflag = 0, fullscreen = 0;
 int cur_shift = 0;
 int cur_width = 0;	/* 0 = narrow, !0 = wide */
@@ -55,7 +55,7 @@ int lower_porch = 3;	/* Default */
 
 // It is unlikely that we get a hardware surface, but one can hope
 #define SCREEN_FLAGS    \
-	(SDL_HWSURFACE|SDL_HWACCEL|SDL_ASYNCBLIT|SDL_DOUBLEBUF|SDL_ANYFORMAT|SDL_HWPALETTE|(fullscreen ? SDL_FULLSCREEN : SDL_RESIZABLE))
+	(SDL_HWSURFACE|SDL_HWACCEL|SDL_ASYNCBLIT|SDL_ANYFORMAT|SDL_HWPALETTE|(fullscreen ? SDL_FULLSCREEN : SDL_RESIZABLE))
 
 Uint16 horbase[513], vertbase[257];
 
@@ -69,6 +69,22 @@ static inline void putpixels(SDL_Surface * s, int x, Uint32 pixel)
     Uint8 *p = (Uint8 *)s->pixels + horbase[x];
     int n = horbase[x+1] - horbase[x];
     do *p++ = pixel; while (--n);
+}
+
+static void Refresh_screen(void)
+{ 
+	SDL_Surface* tmp;
+	tmp = SDL_DisplayFormat(screen);
+	SDL_SoftStretch(tmp, NULL, rl_screen, NULL);
+	SDL_FreeSurface(tmp);
+	SDL_Flip(rl_screen);	
+}
+
+void Quit_SDL(void)
+{ 
+	if (screen) SDL_FreeSurface(screen);
+	if (rl_screen) SDL_FreeSurface(rl_screen);
+	SDL_Quit();
 }
 
 /*
@@ -178,12 +194,13 @@ scr_init() {
 			0xff000000, 0xff0000, 0xff00, 0xff),
 	compute_icon_mask());
 	
-    screen = SDL_SetVideoMode(horsize, vertsize, 0, SCREEN_FLAGS);
-    if (screen == NULL) {
+	rl_screen = SDL_SetVideoMode(480, 272, 16, SCREEN_FLAGS);
+    if (rl_screen == NULL) {
         fprintf(stderr, _("Couldn't set up video: %s\n"),
                         SDL_GetError());
         exit(1);
     }
+	screen = SDL_CreateRGBSurface(SDL_SWSURFACE, horsize, vertsize, 32, 0, 0, 0, 0);
 
     /* Translation disabled because of an SDL bug */
     if (bkmodel == 0) {
@@ -323,7 +340,9 @@ void scr_sync() {
  * palettes.
  */
 void
-scr_refresh_bk0010(unsigned shift, unsigned full) {
+scr_refresh_bk0010(unsigned shift, unsigned full) 
+{
+	static SDL_Surface* tmp;
 	int blit_all = shift != cur_shift || cur_width != full;
 	int i;
 
@@ -348,7 +367,8 @@ scr_refresh_bk0010(unsigned shift, unsigned full) {
 				dstrect.y++;
 			} while (n--);
 			if (!update_all) {
-				SDL_UpdateRect(screen, 0, vertbase[i], width, vertstretch);
+				Refresh_screen();
+				//SDL_UpdateRect(screen, 0, vertbase[i], width, vertstretch);
 			}
 		}
 	}
@@ -363,8 +383,9 @@ scr_refresh_bk0010(unsigned shift, unsigned full) {
 	}
 	cur_width = full;
 	cur_shift = shift;
-	if (update_all) {
-		SDL_Flip(screen);
+	if (update_all) 
+	{
+		Refresh_screen();
 	}
 	scr_dirty = 0;
 }
@@ -401,7 +422,8 @@ scr_refresh_bk0011_1(unsigned shift, unsigned full) {
 			}
 			SDL_BlitSurface(l, &srcrect, screen, &dstrect);
 			if (!update_all) {
-				SDL_UpdateRect(screen, 0, dstrect.y, width, 1);
+				//SDL_UpdateRect(screen, 0, dstrect.y, width, 1);
+				Refresh_screen();
 			}
 		}
 	}
@@ -416,7 +438,7 @@ scr_refresh_bk0011_1(unsigned shift, unsigned full) {
 	cur_width = full;
 	cur_shift = shift;
 	if (update_all) {
-		SDL_Flip(screen);
+		Refresh_screen();
 	}
 	scr_dirty = 0;
 	change_req >>= 1;
@@ -452,7 +474,8 @@ scr_refresh_bk0011_2(unsigned shift, unsigned full) {
 			}
 			SDL_BlitSurface(l, &srcrect, screen, &dstrect);
 			if (!update_all) {
-				SDL_UpdateRect(screen, 0, dstrect.y, width, 1);
+				//SDL_UpdateRect(screen, 0, dstrect.y, width, 1);
+				Refresh_screen();
 			}
 		}
 	}
@@ -467,7 +490,7 @@ scr_refresh_bk0011_2(unsigned shift, unsigned full) {
 	cur_width = full;
 	cur_shift = shift;
 	if (update_all) {
-		SDL_Flip(screen);
+		Refresh_screen();
 	}
 	scr_dirty = 0;
 	change_req >>= 1;
