@@ -30,9 +30,12 @@
 # Change as needed
 #
 
-CC = gcc -std=gnu89
-LD = gcc
-CFLAGS = -O1 -fno-common -g -DSHIFTS_ALLOWED -DEIS_ALLOWED
+CC = /opt/rs97-toolchain/bin/mipsel-linux-gcc -std=gnu89
+LD = /opt/rs97-toolchain/bin/mipsel-linux-gcc
+
+CFLAGS = -Ofast -fdata-sections -ffunction-sections -mno-check-zero-division -mno-fp-exceptions -mframe-header-opt -fno-PIC -fno-common -mips32 -fno-PIC -mno-abicalls -mno-interlink-compressed -fsingle-precision-constant
+CFLAGS += -DSHIFTS_ALLOWED -DEIS_ALLOWED
+LDFLAGS = -lSDL -lm -ldl -lc -Wl,--as-needed -Wl,--gc-sections -flto -s -no-pie 
 # CFLAGS = -O4 -fomit-frame-pointer # -DSHIFTS_ALLOWED
 
 #
@@ -40,7 +43,6 @@ CFLAGS = -O1 -fno-common -g -DSHIFTS_ALLOWED -DEIS_ALLOWED
 #
 
 TARGET = bk.elf
-UTILS = maketape readtape
 
 #
 # Source and Object Files
@@ -55,14 +57,13 @@ OBJS =	access.o boot.o branch.o conf.o covox.o double.o ea.o itab.o icon.o \
 	single.o weird.o tty.o io.o timing.o sound.o disas.o serial.o bkplip.o \
 	terakdisk.o synth.o emu2149.o
 INCS =	defines.h scr.h conf.h emu2149.h emutypes.h
-USRCS = readtape.c maketape.c pngtorgba.c
 TEXTS =	README.html configure.in icon.c
 
 #
 # Build Rules
 #
 
-everything:	$(TARGET) $(UTILS)
+everything:	$(TARGET)
 	touch everything
 
 .c.o:
@@ -73,13 +74,7 @@ icon.c: pngtorgba bk.png
 	if [ ! -s icon.c ] ; then ./pngtorgba bk.png > icon.c ; fi
 
 $(TARGET):	$(OBJS)
-	$(LD) $(CFLAGS) -o $(TARGET) $(OBJS) -lSDL  -lpthread
-
-readtape: readtape.c
-	$(CC) $(CFLAGS) -o readtape readtape.c
-
-maketape: maketape.c
-	$(CC) $(CFLAGS) -o maketape maketape.c
+	$(LD) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
 #
 # Cool Utilities
@@ -89,14 +84,14 @@ clean:
 	rm -f $(TARGET) $(OBJS) $(UTILS) everything
 
 count:
-	wc -l $(SRCS) $(USRCS)
+	wc -l $(SRCS)
 
 dist:
 	tar czvf bk-terak-emu.`date +%Y.%m.%d`.tar.gz \
-	--exclude CVS $(SRCS) $(INCS) $(USRCS) po Rom $(TEXTS) Makefile bk.png
+	--exclude CVS $(SRCS) $(INCS) po Rom $(TEXTS) Makefile bk.png
 
 depend:
-	makedepend -Dlinux=1 -Y $(SRCS) $(USRCS) $(INCS)
+	makedepend -Dlinux=1 -Y $(SRCS) $(INCS)
 
 # DO NOT DELETE
 
