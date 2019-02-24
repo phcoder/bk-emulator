@@ -7,7 +7,8 @@
 #define _(String) gettext (String)
 
 #define SOUND_EXPONENT	(8+io_sound_freq/20000)
-#define SOUND_BUFSIZE   (1<<SOUND_EXPONENT)		/* about 1/43 sec */
+//#define SOUND_BUFSIZE   (1<<SOUND_EXPONENT)		/* about 1/43 sec */
+#define SOUND_BUFSIZE 512
 #define MAX_SOUND_AGE	~0	/* always play */ 
 
 unsigned io_max_sound_age = MAX_SOUND_AGE;
@@ -35,6 +36,7 @@ int cur_buf;
 
 void callback(void * dummy, Uint8 * outbuf, int len)
 {
+	int i;
 	static int cur_out_buf;
 	if (SDL_SemValue(sem) == NUMBUF) {
 		// Underflow: TODO fill the buffer with silence
@@ -48,14 +50,10 @@ void callback(void * dummy, Uint8 * outbuf, int len)
 
 /* Called after every instruction */
 sound_flush() {
+	int i;
 	if (fullspeed && io_sound_age >= io_max_sound_age && covox_age >= io_max_sound_age) {
-		/* No change in sound bit for a while, nothing to play,
-		 * and drop whatever is in the buffer, 1/21 sec does not
-		 * matter.
-		 */
-		if (sound_buf[cur_buf].ptr != 0) {
-			// TODO: Fill up the buffer with silence
-			// Give the buffer to the callback
+		if (sound_buf[cur_buf].ptr != 0) 
+		{
 			SDL_SemWait(sem);
 			sound_buf[cur_buf].ptr = 0;
 			cur_buf = (cur_buf + 1) % NUMBUF;
@@ -63,8 +61,7 @@ sound_flush() {
 		return;
 	}
 	while (ticks >= io_sound_count) {
-		short * p =
-			&sound_buf[cur_buf].buf[sound_buf[cur_buf].ptr++];
+		short * p = &sound_buf[cur_buf].buf[sound_buf[cur_buf].ptr++];
 		if (io_sound_age < 1000)
 			*p = io_sound_val + covox_val << 4;
 		else
