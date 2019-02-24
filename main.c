@@ -42,6 +42,18 @@
 
 char * printer_file = 0;
 char init_path[BUFSIZ];
+char game_path[512];
+
+unsigned int hasgame;
+unsigned int refreshtime = 0;
+unsigned int hasexit = 0;
+
+/* Some games require the BASIC ROM to be loaded 
+ * in memory before they are playable so i had to make
+ * this little hack. */
+#define LOAD_GAME() if (hasgame == 1) {\
+refreshtime++; \
+if (refreshtime > 64) flag = 0; }
 
 /*
  * At start-up, bkmodel == 0, 1, or 2 means BK-0010, 3 means BK-0011M.
@@ -53,7 +65,7 @@ flag_t fake_disk = 1; /* true for BK-0011M and bkmodel == 2 */
 
 /* Standard path and ROMs for basic hardware configurations */
 
-char * romdir = "/usr/share/bk"; /* default ROM path */
+char * romdir = "./roms"; /* default ROM path */
 char * monitor10rom = "MONIT10.ROM";
 char * focal10rom = "FOCAL10.ROM";
 char * basic10rom = "BASIC10.ROM"; 
@@ -110,6 +122,7 @@ char **argv;
 
 	aflag = 1;		/* auto boot */
 	nflag = 1;		/* enable sound */
+	hasgame = 0;
 	/* nothing is connected to the port by default, use ~/.bkrc */
 	
 	if ( args( argc, argv ) < 0 ) {
@@ -153,7 +166,9 @@ by the environment variable BK_PATH.\n"), romdir );
 	/* Set ROM configuration */
 
 	if (getenv("BK_PATH"))
+	{
 		romdir = getenv("BK_PATH");
+	}
 
 	switch( bkmodel ) {
 	case 0: /* BK0010 */
@@ -174,7 +189,7 @@ by the environment variable BK_PATH.\n"), romdir );
 		rompath16 = diskrom;
 		TICK_RATE = 3000000;
 		break;
-        case 3:	/* BK-0011M */
+	case 3:	/* BK-0011M */
 	case 9: /* Terak 8510/a */
 		rompath10 = rompath12 = rompath16 = 0;
 		TICK_RATE = 4000000;
@@ -245,12 +260,32 @@ by the environment variable BK_PATH.\n"), romdir );
 	if (init_path[0]) {
 		tracefile = fopen(init_path, "w");
 	}
-	if ( aflag ) {
-		run( 1 );			/* go for it */	
+	
+	/*if ( aflag ) 
+	{
+		run( 1 );
 		ui();
 	} else {
-		ui();				/* run the user interface */
+		ui();
+	}*/
+	while(!hasexit)
+	{
+		run( 1 );			/* go for it */	
+		if (hasgame == 1)
+		{
+			extern ui_load(const char *);
+			ui_load(game_path);
+			ui_start( "1000", 1 );
+			hasgame = 0;
+		}
+		else if (hasexit == 0)
+		{
+			ui();	
+		}
 	}
+	
+	disk_finish();
+	Quit_SDL();
 
 	return 0;		/* get out of here */
 }
@@ -333,6 +368,11 @@ char **argv;
 				traceflag = 1;
 				if (*++farg)
 					strcpy(init_path, farg);
+				break;
+			case 'g':
+				hasgame = 1;
+				if (*++farg)
+					strcpy(game_path, farg);
 				break;
 			case 'l':
 				printer_file = *++farg ? farg : (argc--,*++narg);;
@@ -456,7 +496,8 @@ int flag;
 	 * Run until told to stop.
 	 */
 
-	do {
+	do 
+	{
 		addtocybuf(p->regs[PC]);
 
 		/*
@@ -476,6 +517,8 @@ int flag;
 			result = (itab[p->ir>>6].func)( p );
 			timing(p);
 		}
+		
+		LOAD_GAME();
 
 		/*
 		 * Mop up the mess.
@@ -585,7 +628,7 @@ int flag;
 				ticks - SDL_GetTicks() * (TICK_RATE/1000.0);
 			if (cur_delta - timing_delta > TICK_RATE/100) {
 				int msec = (cur_delta - timing_delta) / (TICK_RATE/1000);
-				SDL_Delay(msec / 10 * 10);
+				SDL_Delay((msec / 10 * 10));
 			}
 		    }
 		}
@@ -605,7 +648,7 @@ int flag;
 				ev_fire( priority );
 			}
 		}
-		if (checkpoint(p->regs[PC])) {
+		if (checkpoint(p->regs[PC]) || hasexit == 1) {
 			flag = 0;
 		}
 	} while( flag );
