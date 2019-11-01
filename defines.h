@@ -492,12 +492,15 @@ typedef struct {
 } disk_t;
 
 extern unsigned long pending_interrupts;
+void ev_fire( int priority );
 void sim_init(void);
+int checkpoint(d_word pc);
 extern int breakpoint;
 extern unsigned char change_req;
 extern unsigned char param_change_line;
 extern unsigned char req_page[512], req_palette[512];
 extern int cybuf[1024];
 extern int cybufidx;
+void intr_hand(void);
 
 #endif
