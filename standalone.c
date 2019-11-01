@@ -49,13 +49,6 @@ double ticks_screen = 0.0;
 
 unsigned int hasexit = 0;
 
-/* Some games require the BASIC ROM to be loaded 
- * in memory before they are playable so i had to make
- * this little hack. */
-#define LOAD_GAME() if (hasgame == 1) {\
-refreshtime++; \
-if (refreshtime > 64) flag = 0; }
-
 /*
  * main()
  */
@@ -385,20 +378,11 @@ run( int flag )
 	p->total = 0;
 }
 
-
 int
 run_2( p, flag )
 register pdp_regs *p;
 int flag;
 {
-	register int result;		/* result of execution */
-	int result2;			/* result of error handling */
-	extern void intr_hand();	/* SIGINT handler */
-	register unsigned priority;	/* current processor priority */
-	int rtt = 0;			/* rtt don't trap yet flag */
-	d_word oldpc;
-	static char buf[80];
-
 	/*
 	 * Clear execution stop flag and install SIGINT handler.
 	 */
@@ -406,7 +390,6 @@ int flag;
 	stop_it = 0;
 	signal( SIGINT, intr_hand );
 
-	Uint32 last_screen_update = SDL_GetTicks();
 	double timing_delta = ticks - SDL_GetTicks() * (TICK_RATE/1000.0);
 	c_addr startpc = p->regs[PC];
 
@@ -416,123 +399,18 @@ int flag;
 
 	do 
 	{
-		addtocybuf(p->regs[PC]);
+		flag = run_cpu_until(p, ticks_screen);
 
-		/*
-		 * Fetch and execute the instruction.
-		 */
-	
-		if (traceflag) {
-			disas(p->regs[PC], buf);
-			if (tracefile) fprintf(tracefile, "%s\t%s\n", buf, state(p));
-			else printf("%s\n", buf);
-		}
-		result = ll_word( p, p->regs[PC], &p->ir );
-		oldpc = p->regs[PC];
-		p->regs[PC] += 2;
-		if (result == OK) {
-			result = (itab[p->ir>>6])( p );
-			timing(p);
-		}
-		
-		LOAD_GAME();
-
-		/*
-		 * Mop up the mess.
-		 */
-
-		if ( result != OK ) {
-			switch( result ) {
-			case BUS_ERROR:			/* vector 4 */
-				ticks += 64;
-			case ODD_ADDRESS:
-				fprintf( stderr, _(" pc=%06o, last branch @ %06o\n"),
-					oldpc, last_branch );
-				result2 = service( (d_word) 04 );
-				break;
-			case CPU_ILLEGAL:		/* vector 10 */
-#undef VERBOSE_ILLEGAL
-#ifdef VERBOSE_ILLEGAL
-				disas(oldpc, buf);
-				fprintf( stderr, 
-				_("Illegal inst. %s, last branch @ %06o\n"),
-					buf, last_branch );
-#endif
-				result2 = service( (d_word) 010 );
-				break;
-			case CPU_BPT:			/* vector 14 */
-				result2 = service( (d_word) 014 );
-				break;
-			case CPU_EMT:			/* vector 30 */
-				result2 = service( (d_word) 030 );
-				break;
-			case CPU_TRAP:			/* vector 34 */
-				result2 = service( (d_word) 034 );
-				break;
-			case CPU_IOT:			/* vector 20 */
-				result2 = service( (d_word) 020 );
-				break;
-			case CPU_WAIT:
-				in_wait_instr = 1;
-				result2 = OK;
-				break;
-			case CPU_RTT:
-				rtt = 1;
-				result2 = OK;
-				break;
-			case CPU_HALT:
-				io_stop_happened = 4;
-				result2 = service( (d_word) 004 );
-				break;
-			default:
-				fprintf( stderr, _("\nUnexpected return.\n") );
-				fprintf( stderr, _("exec=%d pc=%06o ir=%06o\n"),
-					result, oldpc, p->ir );
-				flag = 0;
-				result2 = OK;
-				break;
-			}
-			if ( result2 != OK ) {
-				fprintf( stderr, _("\nDouble trap @ %06o.\n"), oldpc);
-				lc_word(0177716, &p->regs[PC]);
-				p->regs[PC] &= 0177400;
-				/* p->regs[SP] = 01000;	/* whatever */
-			}
-		}
-
-		if (( p->psw & 020) && (rtt == 0 )) {		/* trace bit */
-			if ( service((d_word) 014 ) != OK ) {
-				fprintf( stderr, _("\nDouble trap @ %06o.\n"), p->regs[PC]);
-				lc_word(0177716, &p->regs[PC]);
-				p->regs[PC] &= 0177400;
-				p->regs[SP] = 01000;	/* whatever */
-			}
-		}
-		rtt = 0;
-		p->total++;
-
-		if (nflag)
-			sound_flush();
-
-		if (bkmodel && ticks >= ticks_timer) {
-			scr_sync();
-			if (timer_intr_enabled) {
-				ev_register(TIMER_PRI, service, 0, 0100);
-			}
-			ticks_timer += half_frame_delay;
+		/* Some games require the BASIC ROM to be loaded
+		 * in memory before they are playable so i had to make
+		 * this little hack. */
+		if (hasgame == 1) {
+		  refreshtime++;
+		  if (refreshtime > 2) return 0;
 		}
 
 		if (ticks >= ticks_screen) {
-		    /* In full speed, update every 40 real ms */
-		    if (fullspeed) {
-			Uint32 cur_sdl_ticks = SDL_GetTicks();
-		 	if (cur_sdl_ticks - last_screen_update >= 40) {
-			    last_screen_update = cur_sdl_ticks;
-			    scr_flush();
-			}
-		    } else {
-			scr_flush();
-		    }
+		    maybe_scr_flush();
 		    tty_recv();
 		    ticks_screen += frame_delay;
 		    /* In simulated speed, if we're more than 10 ms
@@ -550,22 +428,7 @@ int flag;
 		    }
 		}
 
-		/*
-		 * See if execution should be stopped.  If so
-		 * stop running, otherwise look for events
-		 * to fire.
-		 */
-
-		if ( stop_it ) {
-			fprintf( stderr, _("\nExecution interrupted.\n") );
-			flag = 0;
-		} else {
-			priority = ( p->psw >> 5) & 7;
-			if ( pending_interrupts && priority != 7 ) {
-				ev_fire( priority );
-			}
-		}
-		if (checkpoint(p->regs[PC]) || hasexit == 1) {
+		if (hasexit == 1) {
 			flag = 0;
 		}
 	} while( flag );
