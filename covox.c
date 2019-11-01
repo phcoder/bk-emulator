@@ -5,9 +5,6 @@
 #include <libintl.h>
 #define _(String) gettext (String)
 
-unsigned char covox_val;
-unsigned int covox_age;
-
 void covox_init() {
 	covox_val = 0;
 	covox_age = ~0;

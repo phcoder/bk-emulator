@@ -59,7 +59,6 @@ void  bkplip_init() {
 
 static int len_left = 0;
 static int curbyte = 0;
-static flag_t nibble = 0;
 static int txlen = 0, txbyte = 0;
 /*
  * When no data is present, returns 0.

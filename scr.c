@@ -5,7 +5,7 @@
 #define _(String) gettext (String)
 
 SDL_Surface * screen, *rl_screen;
-flag_t cflag = 0, fullscreen = 0;
+flag_t fullscreen = 0;
 int cur_shift = 0;
 int cur_width = 0;	/* 0 = narrow, !0 = wide */
 int horsize = 512, vertsize = 512;
@@ -47,6 +47,8 @@ unsigned scr_dirty = 0;
 unsigned char req_page[512], req_palette[512];
 unsigned char active_palette, active_page;
 unsigned char half_frame = 0;
+unsigned char param_change_line;
+unsigned char change_req;
 
 int upper_porch = 0;	/* Default */
 int lower_porch = 3;	/* Default */
@@ -153,8 +155,6 @@ compute_icon_mask() {
         }
         return mask;
 }
-
-unsigned scan_line_duration;
 
 /* BK-0010 screen refresh - no palettes */
 extern void scr_refresh_bk0010(unsigned shift, unsigned full);
@@ -295,7 +295,6 @@ scr_switch(int hsize, int vsize) {
  * Each half frame is TICK_RATE/50 long and consists of 128 lines.
  */
 unsigned current_scan_line() {
-	extern double half_frame_delay;
 	unsigned nframes = ticks/half_frame_delay;
 	unsigned frame_ticks = ticks - half_frame_delay * nframes;
 	unsigned line = frame_ticks / scan_line_duration;
@@ -303,9 +302,6 @@ unsigned current_scan_line() {
 	line -= upper_porch;
 	if (line < 256) return line; else return 256;
 }
-
-unsigned char param_change_line;
-unsigned char change_req;
 
 void scr_param_change(int pal, int buf) {
 	int cur = current_scan_line();

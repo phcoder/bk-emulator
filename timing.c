@@ -2,8 +2,6 @@
 #include <libintl.h>
 #define _(String) gettext (String)
 
-double ticks = 0;    /* in clock ticks, integral */
-
 #define REGREG 12
 
 static const int a_time[8]  = {0, 12, 12, 20, 12, 20, 20, 28};

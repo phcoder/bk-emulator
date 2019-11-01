@@ -39,7 +39,6 @@
 void load_rom(unsigned start, const char * rompath, unsigned min_size, unsigned max_size) {
 	char * path;
 	int i;
-	extern unsigned long pdp_ram_map;
 	unsigned long saved_ram_map = pdp_ram_map;
 	FILE * romf;
 

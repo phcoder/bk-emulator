@@ -12,9 +12,6 @@ unsigned char tape_status = 1; /* 0 = tape moving, 1 = tape stopped */
 
 flag_t fake_tape = 1;	/* Default */
 
-extern int tapeflag;
-double tape_read_ticks, tape_write_ticks;
-extern double ticks;
 void tape_read_start(), tape_read_finish();
 
 static enum { Idle, Addr, Len, Name, Data, Checksum } fake_state = Idle;

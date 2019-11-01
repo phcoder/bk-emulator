@@ -42,7 +42,6 @@
 
 int ui_done;
 int breakpoint = -1;
-extern int traceflag;
 static char buf[BUFSIZ];
 
 void ui_load(const char *s);

@@ -24,29 +24,12 @@
 #include <libintl.h>
 #define _(String) gettext (String)
 
-/* 
- * BK-0011 has 8 8Kw RAM pages and 4 8 Kw ROM pages.
- * RAM pages 1 and 7 are video RAM.
- */
-d_word ram[8][8192];
-d_word rom[4][8192];
-d_word system_rom[8192];
-unsigned char umr[65536];
-
 /*
  * Page mapping, per 8 Kw page. Default is a mapping mimicking BK-0010
  */
 d_word * pagemap[4] = { ram[6], ram[1], rom[0], system_rom };
 
 #define mem(x) pagemap[(x)>>14][((x) & 037777) >> 1]
-
-/*
- * Each bit corresponds to a Kword,
- * the lowest 8 Kwords are RAM, the next 8 are screen memory,
- * the rest is usually ROM.
- */
-unsigned long pdp_ram_map = 0x0000ffff;
-unsigned long pdp_mem_map;
 
 #define IS_RAM_ADDRESS(x) ((pdp_ram_map >> ((x) >> 11)) & 1)
 #define IS_VALID_ADDRESS(x) ((pdp_mem_map >> ((x) >> 11)) & 1)

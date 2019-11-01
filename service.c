@@ -14,10 +14,6 @@
 #include <libintl.h>
 #define _(String) gettext (String)
 
-/* 1 if interrupt requested while WAIT was in effect */
-
-unsigned char in_wait_instr = 0;
-
 /* Allows up to 32 different HW interrupts,
  * there can be no more than 1 pending interrupt of each kind.
  */

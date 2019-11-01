@@ -46,9 +46,6 @@
 #define TTY_DOWNLOAD	0372	/* direct file load */
 d_word tty_reg;
 d_word tty_data;
-d_word tty_scroll = 1330;
-unsigned char key_pressed = 0100;
-flag_t timer_intr_enabled = 0;
 int special_keys[SDLK_LAST], shifted[256];
 
 static tty_pending_int = 0;
@@ -139,6 +136,7 @@ void tty_init()
 	tty_pending_int = 0;
 	tty_scroll = 01330;
 	timer_intr_enabled = 0;
+        key_pressed = 0100;
 	if (old_scroll != tty_scroll) {
 		scr_dirty = 1;
 	}

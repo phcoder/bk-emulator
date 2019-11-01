@@ -11,15 +11,8 @@
 #define SOUND_BUFSIZE 512
 #define MAX_SOUND_AGE	~0	/* always play */ 
 
-unsigned io_max_sound_age = MAX_SOUND_AGE;
-unsigned io_sound_age = MAX_SOUND_AGE;	/* in io_sound_pace's since last change */
 unsigned io_sound_bufsize,
-	io_sound_freq = 11025,
-	io_sound_pace;
-double io_sound_count;
-extern unsigned io_sound_val, covox_age;
-extern unsigned char covox_val;
-extern flag_t nflag, fullspeed;
+	io_sound_freq = 11025;
 
 typedef struct {
 	short * buf;
@@ -90,6 +83,9 @@ SDL_AudioSpec desired;
 void sound_init() {
 	static init_done = 0;
 	int iarg, i;
+        io_max_sound_age = MAX_SOUND_AGE;
+        io_sound_age = MAX_SOUND_AGE;
+
 	if (!nflag)
 		return;
 	if (fullspeed) {

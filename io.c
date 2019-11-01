@@ -6,11 +6,6 @@
 #include <libintl.h>
 #define _(String) gettext (String)
 
-extern double io_sound_count;
-extern int io_sound_age;
-extern flag_t nflag, fullspeed;
-unsigned io_sound_val = 0;
-flag_t io_stop_happened = 0;
 flag_t telegraph_enabled = 0; 	/* Default */
 
 void io_init() {

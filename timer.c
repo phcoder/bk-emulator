@@ -1,8 +1,5 @@
 #include "defines.h"
 
-d_word timer_count, timer_setup, timer_control;
-double ticks_start;
-unsigned int timer_period;
 #define TIM_UNKNOWN1    1
 #define TIM_CONTINUOUS  2
 #define TIM_ENBEND      4

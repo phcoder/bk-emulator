@@ -30,6 +30,7 @@
 
 #include "defines.h"
 #include "scr.h"
+#include "conf.h"
 #include <SDL/SDL.h>
 #include <libintl.h>
 #include <locale.h>
@@ -40,7 +41,9 @@
  * Globals.
  */
 
-char * printer_file = 0;
+struct bk_state current_state;
+
+const char * printer_file = 0;
 char init_path[BUFSIZ];
 char game_path[512];
 
@@ -59,51 +62,35 @@ if (refreshtime > 64) flag = 0; }
  * At start-up, bkmodel == 0, 1, or 2 means BK-0010, 3 means BK-0011M.
  * During simulation, bkmodel == 0 is BK-0010, 1 is BK-0011M.
  */
-flag_t bkmodel = 3; /* default BK model */
-flag_t terak = 0; /* by default we emulate BK */
-flag_t fake_disk = 1; /* true for BK-0011M and bkmodel == 2 */
 
 /* Standard path and ROMs for basic hardware configurations */
 
 char * romdir = "./roms"; /* default ROM path */
-char * monitor10rom = "MONIT10.ROM";
+const char *const monitor10rom = "MONIT10.ROM";
 char * focal10rom = "FOCAL10.ROM";
 char * basic10rom = "BASIC10.ROM"; 
-char * diskrom = "DISK_327.ROM";
-char * bos11rom = "B11M_BOS.ROM";
-char * bos11extrom = "B11M_EXT.ROM";
-char * basic11arom = "BAS11M_0.ROM";
-char * basic11brom = "BAS11M_1.ROM";
+const char *const diskrom = "DISK_327.ROM";
+const char *const bos11rom = "B11M_BOS.ROM";
+const char *const bos11extrom = "B11M_EXT.ROM";
+const char *const basic11arom = "BAS11M_0.ROM";
+const char *const basic11brom = "BAS11M_1.ROM";
 
-char * rompath10 = 0;
-char * rompath12 = 0;
-char * rompath16 = 0;
+const char * floppyA = "A.img";
+const char * floppyB = "B.img";
+const char * floppyC = "C.img";
+const char * floppyD = "D.img";
 
-int TICK_RATE;	/* cpu clock speed */
-
-char * floppyA = "A.img";
-char * floppyB = "B.img";
-char * floppyC = "C.img";
-char * floppyD = "D.img";
-
-unsigned short last_branch;
 /*
  * Command line flags and variables.
  */
 
 flag_t aflag;		/* autoboot flag */
-flag_t nflag;		/* audio flag */
-flag_t mouseflag;	/* mouse flag */
 flag_t covoxflag;	/* covox flag */
 flag_t synthflag;	/* AY-3-8910 flag */
 flag_t plipflag;	/* PLIP flag */
-flag_t fullspeed;	/* do not slow down to real BK speed */
 flag_t traceflag;	/* print all instruction addresses */
 FILE * tracefile;	/* trace goes here */
-flag_t tapeflag;	/* Disable reading from tape */
 flag_t turboflag;	/* "Turbo" mode with doubled clock speed */
-double frame_delay;	/* Delay in ticks between video frames */
-double half_frame_delay;
 
 /*
  * main()
@@ -389,10 +376,9 @@ char **argv;
 	return 0;
 }
 
+static int checkpoint(d_word pc);
 
-pdp_regs pdp;		/* internal processor registers */
-volatile int stop_it;	/* set when a SIGINT happens during execution */
-
+const char *rompath10, *rompath12, *rompath16;
 
 /*
  * sim_init() - Initialize the cpu registers.
@@ -408,6 +394,8 @@ sim_init()
 	}
 	pdp.ir = 0;
 	pdp.psw = 0200;
+
+	pdp_ram_map = 0x0000ffff;
 }
 
 /*
@@ -455,7 +443,6 @@ run( int flag )
 	p->total = 0;
 }
 
-double ticks_timer = 0.0;
 double ticks_screen = 0.0;
 extern unsigned long pending_interrupts;
 
@@ -505,7 +492,6 @@ int flag;
 		 */
 	
 		if (traceflag) {
-			extern double io_sound_count;
 			disas(p->regs[PC], buf);
 			if (tracefile) fprintf(tracefile, "%s\t%s\n", buf, state(p));
 			else printf("%s\n", buf);
@@ -667,11 +653,8 @@ void intr_hand()
 	stop_it = 1;
 }
 
-checkpoint(pc)
-d_word pc;
+static int checkpoint(d_word pc)
 {
-    extern int breakpoint;
-    extern unsigned char fake_tape;
     switch(pc) {
     case 0116256:
 		if (fake_tape && !bkmodel) {

@@ -152,7 +152,6 @@ extern unsigned int hasexit;
 #define PDP_READABLE_MEM_SIZE   (63 * 512)  /* 0 - 175777 */
 #define PDP_FULL_MEM_SIZE       (64 * 512)  /* 0 - 177777 */
 
-extern d_word rom[4][8192], ram[8][8192], system_rom[8192];
 extern void line_init(void);
 void scr_init(void);
 void boot_init(void);
@@ -218,29 +217,132 @@ typedef int (*_itab_t)();
  * Global variables.
  */
 
-extern struct timeval real_time;
-extern int ui_done;
-extern unsigned short last_branch;
-extern pdp_regs pdp;
-extern event *event_list[NUM_PRI];
-extern char * printer_file;
-extern char * romdir;
-extern char * rompath10, *rompath12, *rompath16;
-extern char * bos11rom, * diskrom, * bos11extrom, * basic11arom, * basic11brom;
-extern int TICK_RATE;
+struct bk_state {
+	int ui_done;
+	unsigned short _last_branch;
+	pdp_regs _pdp; /* internal processor registers */
+	int _TICK_RATE;
 
-extern char * floppyA, *floppyB, *floppyC, *floppyD;
-extern const _itab_t itab[];
-extern unsigned short tty_scroll;
+	unsigned short _tty_scroll;
+	flag_t _key_pressed;
+	flag_t _fake_disk;
+	/* 1 if interrupt requested while WAIT was in effect */
+	flag_t _in_wait_instr;
+	unsigned io_sound_val;
+	flag_t _io_stop_happened;
+	int    io_tape_mode, io_tape_val, io_tape_bit;
+	flag_t _nflag;		/* audio flag */
+	flag_t _mouseflag;	/* mouse flag */
+	flag_t _fullspeed;	/* do not slow down to real BK speed */
+	flag_t _tapeflag;	/* Disable reading from tape */
+	double _frame_delay;	/* Delay in ticks between video frames */
+        double _half_frame_delay;
+
+	flag_t _cflag, _bkmodel, _terak;
+	long long _ticks_timer;
+	long long _ticks, io_tape_ticks;     /* in main clock freq, integral */
+	long long _tape_read_ticks, _tape_write_ticks;
+	flag_t _timer_intr_enabled;
+	volatile int _stop_it;	/* set when a SIGINT happens during execution */
+
+	/* 
+	 * BK-0011 has 8 8Kw RAM pages and 4 8 Kw ROM pages.
+	 * RAM pages 1 and 7 are video RAM.
+	 */
+	d_word _ram[8][8192];
+	d_word _rom[4][8192];
+	d_word _system_rom[8192];
+	unsigned char _umr[65536];
+
+	/*
+	 * Each bit corresponds to a Kword,
+	 * the lowest 8 Kwords are RAM, the next 8 are screen memory,
+	 * the rest is usually ROM.
+	 */
+	unsigned long _pdp_ram_map;
+	unsigned long _pdp_mem_map;
+
+	d_word _timer_count, _timer_setup, _timer_control;
+	long long _ticks_start;
+	unsigned int _timer_period;
+
+	long long _framectr;
+	long long _soundctr;
+
+	unsigned _scan_line_duration;
+
+	unsigned char _covox_val;
+	unsigned int _covox_age;
+	unsigned _io_sound_val;
+
+	unsigned _io_max_sound_age;
+	unsigned _io_sound_age;	/* in io_sound_pace's since last change */
+	double _io_sound_pace;
+	double _io_sound_count;
+};
+
+extern const char *printer_file;
+extern const char *floppyA, *floppyB, *floppyC, *floppyD;
+
+extern const char *rompath10, *rompath12, *rompath16;
+extern const char *const bos11rom, *const diskrom, *const bos11extrom;
+extern const char *const basic11arom, *const basic11brom;
+
+extern struct bk_state current_state;
+extern 	flag_t traceflag;	/* print all instruction addresses */
+extern 	FILE * tracefile;	/* trace goes here */
+extern char * romdir;
+
 extern unsigned scr_dirty;
-extern flag_t key_pressed;
-extern flag_t in_wait_instr;
-extern unsigned io_sound_val;
-extern flag_t io_stop_happened;
-extern int      io_tape_mode, io_tape_val, io_tape_bit;
-extern flag_t cflag, mouseflag, bkmodel, terak, nflag, fullspeed;
-extern double ticks, io_tape_ticks;     /* in main clock freq, integral */
-extern flag_t timer_intr_enabled;
+
+extern const _itab_t itab[];
+
+#define bkmodel current_state._bkmodel
+#define stop_it current_state._stop_it
+#define nflag current_state._nflag
+#define io_stop_happened current_state._io_stop_happened
+#define ticks current_state._ticks
+#define in_wait_instr current_state._in_wait_instr
+#define pdp current_state._pdp
+#define timer_intr_enabled current_state._timer_intr_enabled
+#define last_branch current_state._last_branch
+#define ticks_timer current_state._ticks_timer
+#define terak current_state._terak
+#define TICK_RATE current_state._TICK_RATE
+#define mouseflag current_state._mouseflag
+#define fullspeed current_state._fullspeed
+#define key_pressed current_state._key_pressed
+#define fake_disk current_state._fake_disk
+#define tapeflag current_state._tapeflag
+#define frame_delay current_state._frame_delay
+#define half_frame_delay current_state._half_frame_delay
+#define cflag current_state._cflag
+#define tty_scroll current_state._tty_scroll
+#define ram current_state._ram
+#define rom current_state._rom
+#define system_rom current_state._system_rom
+#define umr current_state._umr
+#define pdp_ram_map current_state._pdp_ram_map
+#define pdp_mem_map current_state._pdp_mem_map
+
+#define timer_count current_state._timer_count
+#define timer_setup current_state._timer_setup
+#define timer_control current_state._timer_control
+#define ticks_start current_state._ticks_start
+#define timer_period current_state._timer_period
+#define framectr current_state._framectr
+#define soundctr current_state._soundctr
+#define scan_line_duration current_state._scan_line_duration
+
+#define covox_val current_state._covox_val
+#define covox_age current_state._covox_age
+#define io_sound_val current_state._io_sound_val
+#define io_max_sound_age current_state._io_max_sound_age
+#define io_sound_age current_state._io_sound_age
+#define io_sound_pace current_state._io_sound_pace
+#define io_sound_count current_state._io_sound_count
+#define tape_read_ticks current_state._tape_read_ticks
+#define tape_write_ticks current_state._tape_write_ticks
 
 /*
  * Inline defines.
