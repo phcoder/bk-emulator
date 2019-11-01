@@ -531,3 +531,14 @@ ui_viewbuf ( char * s )
 		}
 	}
 }
+
+void
+ui_download() {
+	char buf[1024];
+	fputs(_("NAME? "), stderr);
+	fgets(buf, 1024, stdin);
+	if (buf[strlen(buf)-1] == '\n') {
+		buf[strlen(buf)-1] = '\0';
+	}
+	ui_load(buf);
+}

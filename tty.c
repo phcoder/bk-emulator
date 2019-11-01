@@ -19,9 +19,7 @@
  */
 
 #include "defines.h"
-#include "SDL/SDL.h"
-#include "SDL/SDL_keysym.h"
-#include "SDL/SDL_events.h"
+#include "tty.h"
 #include <ctype.h>
 #include "intl.h"
 
@@ -37,91 +35,10 @@
 
 /* magic numbers for special keys */
 
-#define TTY_NOTHING     0377
-#define TTY_STOP        0376
-#define TTY_RESET	0375	/* "reset buton", only with AR2 */
-#define TTY_AR2		0374	/* AP2 */
-#define TTY_SWITCH	0373	/* video mode switch */
-#define TTY_DOWNLOAD	0372	/* direct file load */
 d_word tty_reg;
 d_word tty_data;
-int special_keys[SDLK_LAST], shifted[256];
 
-static tty_pending_int = 0;
-extern unsigned long pending_interrupts;
-
-tty_open()
-{
-    int i;
-    /* initialize the keytables */
-    for (i = 0; i < SDLK_LAST; i++) {
-	special_keys[i] = -1;
-    }
-    special_keys[SDLK_BACKSPACE] = 030;
-    special_keys[SDLK_TAB] = 011;
-    special_keys[SDLK_RETURN] = 012;
-    special_keys[SDLK_CLEAR] = 014;        /* sbr */
-
-    for (i = SDLK_NUMLOCK; i <= SDLK_COMPOSE; i++)
-	special_keys[i] = TTY_NOTHING;
-
-    special_keys[SDLK_SCROLLOCK] = TTY_SWITCH;
-    special_keys[SDLK_LSUPER] = TTY_AR2;
-    special_keys[SDLK_LALT] = TTY_AR2;
-    special_keys[SDLK_ESCAPE] = TTY_STOP;
-
-    special_keys[SDLK_DELETE] = -1;
-    special_keys[SDLK_LEFT] = 010;
-    special_keys[SDLK_UP] = 032;
-    special_keys[SDLK_RIGHT] = 031;
-    special_keys[SDLK_DOWN] = 033;
-    special_keys[SDLK_HOME] = 023;         /* vs */
-    special_keys[SDLK_PAGEUP] = -1;     /* PgUp */
-    special_keys[SDLK_PAGEDOWN] = -1;    /* PgDn */
-    special_keys[SDLK_END] = -1;
-    special_keys[SDLK_INSERT] = -1;
-    special_keys[SDLK_BREAK] = TTY_STOP;
-    special_keys[SDLK_F1] = 0201;          /* povt */
-    special_keys[SDLK_F2] = 003;           /* kt */
-    special_keys[SDLK_F3] = 0213;          /* -|--> */
-    special_keys[SDLK_F4] = 026;           /* |<--- */
-    special_keys[SDLK_F5] = 027;           /* |---> */
-    special_keys[SDLK_F6] = 0202;          /* ind su */
-    special_keys[SDLK_F7] = 0204;          /* blk red */
-    special_keys[SDLK_F8] = 0200;          /* shag */
-    special_keys[SDLK_F9] = 014;           /* sbr */
-    special_keys[SDLK_F10] = TTY_STOP;
-    special_keys[SDLK_F11] = TTY_RESET;
-    special_keys[SDLK_F12] = TTY_DOWNLOAD;
-    for (i = 0; i < 256; i++) {
-	shifted[i] = i;
-    }
-    for (i = 'A'; i <= 'Z'; i++) {
-	shifted[i] = i ^ 040;
-	shifted[i ^ 040] = i;
-    }
-    shifted['1'] = '!';
-    shifted['2'] = '@';
-    shifted['3'] = '#';
-    shifted['4'] = '$';
-    shifted['5'] = '%';
-    shifted['6'] = '^';
-    shifted['7'] = '&';
-    shifted['8'] = '*';
-    shifted['9'] = '(';
-    shifted['0'] = ')';
-    shifted['-'] = '_';
-    shifted['='] = '+';
-    shifted['\\'] = '|';
-    shifted['['] = '{';
-    shifted[']'] = '}';
-    shifted[';'] = ':';
-    shifted['\''] = '"';
-    shifted['`'] = '~';
-    shifted[','] = '<';
-    shifted['.'] = '>';
-    shifted['/'] = '?';
-}
+static int tty_pending_int = 0;
 
 /*
  * tty_init() - Initialize the BK-0010 keyboard
@@ -135,10 +52,10 @@ void tty_init()
 	tty_pending_int = 0;
 	tty_scroll = 01330;
 	timer_intr_enabled = 0;
-        key_pressed = 0100;
 	if (old_scroll != tty_scroll) {
 		scr_dirty = 1;
 	}
+	key_pressed = 0100;
 }
 
 /*
@@ -291,83 +208,22 @@ void stop_key() {
  * LALT : 308
 */
 
-static int ar2 = 0;
-void tty_keyevent(SDL_Event * pev) {
-	int k, c;
-	k = pev->key.keysym.sym;
-
-	if (SDLK_UNKNOWN == k) {
-	    return;
-	}
-	
-	if (k == SDLK_LCTRL)
-		k = SDLK_RETURN;
-	else if (k == SDLK_LALT)
-		k = SDLK_SPACE;
-	else if (k == SDLK_BACKSPACE)
-		k = 265;
-	else if (k == SDLK_TAB)
-		k = 257;
-	else if (k == SDLK_LSHIFT)
-		k = 259;
-	else if (k == SDLK_SPACE)
-		hasexit = 1;
-		
-	if(pev->type == SDL_KEYUP) {
-	    key_pressed = 0100;
-	    if (special_keys[k] == TTY_AR2) ar2 = 0;
-	    return;
+void tty_keyevent(int c) {
+	if(c == -1) {
+		key_pressed = 0100;
+		return;
 	}
 	/* modifier keys handling */
-	if (special_keys[k] != -1) {
-	    switch (special_keys[k]) {
-	    case TTY_STOP:
+	switch (c) {
+	case TTY_STOP:
 		stop_key();     /* STOP is NMI */
 		return;
-	    case TTY_NOTHING:
+	case TTY_NOTHING:
 		return;
-	    case TTY_AR2:
-		ar2 = 1;
+	case TTY_RESET | 0200:
+		lc_word(0177716, &pdp.regs[PC]);
+		pdp.regs[PC] &= 0177400;
 		return;
-	    case TTY_RESET:
-		if (ar2) {
-			lc_word(0177716, &pdp.regs[PC]);
-			pdp.regs[PC] &= 0177400;
-	   	}
-		return;
-	    case TTY_DOWNLOAD: {
-		char buf[1024];
-		extern ui_load(const char *);
-		fputs(_("NAME? "), stderr);
-		fgets(buf, 1024, stdin);
-		if (buf[strlen(buf)-1] == '\n') {
-			buf[strlen(buf)-1] = '\0';
-		}
-		ui_load(buf);
-		return;
-	    }
-	    case TTY_SWITCH:
-		scr_switch(0, 0);
-		return;
-	    default:
-		c = special_keys[k];
-	    }
-	} else {
-	    // Keysym follows ASCII
-	    c = k;
-	    if ((pev->key.keysym.mod & KMOD_CAPS) && isalpha(c)) {
-		c &= ~040;  /* make it capital */
-	    }
-	    if (pev->key.keysym.mod & KMOD_SHIFT) {
-		c = shifted[c];
-	    }
-	    if ((pev->key.keysym.mod & KMOD_CTRL) && (c & 0100)) {
-		c &= 037;
-	    }
-	}
-	// Win is AP2
-	if (ar2) {
-	    c |= 0200;
 	}
 	tty_reg |= TTY_DONE;
 	tty_data = c & 0177;
@@ -378,41 +234,4 @@ void tty_keyevent(SDL_Event * pev) {
 	}
 }
 
-/*
- * tty_recv() - Called at various times during simulation to
- * set if the user typed something.
- */
-
-tty_recv()
-{
-    SDL_Event ev;
-    /* fprintf(stderr, "Polling events..."); */
-    while (SDL_PollEvent(&ev)) {
-	extern void mouse_event(SDL_Event * pev);
-
-	    switch (ev.type) {
-	    case SDL_KEYDOWN: case SDL_KEYUP:
-		tty_keyevent(&ev);
-		break;
-	    case SDL_VIDEOEXPOSE:
-	    case SDL_ACTIVEEVENT:
-		/* the visibility changed */
-		scr_dirty  = 256;
-		break;
-	    case SDL_MOUSEBUTTONDOWN:
-	    case SDL_MOUSEBUTTONUP:
-	    case SDL_MOUSEMOTION:
-		mouse_event(&ev);
-		break;
-	    case SDL_VIDEORESIZE:
-		scr_switch(ev.resize.w, ev.resize.h);
-		break;
-	    case SDL_QUIT:
-		exit(0);
-	    default:;
-		fprintf(stderr, _("Unexpected event %d\n"), ev.type);
-	    }
-    }
-    /* fprintf(stderr, "done\n"); */
-}
 
