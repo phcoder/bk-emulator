@@ -45,8 +45,8 @@ flag_t covoxflag;	/* covox flag */
 flag_t synthflag;	/* AY-3-8910 flag */
 flag_t plipflag;	/* PLIP flag */
 flag_t turboflag;	/* "Turbo" mode with doubled clock speed */
-double ticks_screen = 0.0;
 
+long long ticks_screen = 0;
 unsigned int hasexit = 0;
 
 /*
