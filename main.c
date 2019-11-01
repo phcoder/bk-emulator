@@ -33,7 +33,6 @@
 #include "conf.h"
 #include "intl.h"
 #include <locale.h>
-#include <sys/time.h>
 
 /*
  * Globals.
