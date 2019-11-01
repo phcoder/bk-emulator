@@ -17,19 +17,7 @@ typedef enum {
 	lateF = 020000, syncF = 040000, errF = 0100000
 } disk_flg;
 
-/* Why bother, let's memory-map the files! */
-typedef struct {
-	unsigned length;
-	unsigned short * image;
-	unsigned short * ptr;
-	unsigned char track;
-	disk_cmd cmd;
-	unsigned char ro;
-	unsigned char motor;
-	unsigned char inprogress;
-	unsigned char crc;
-	unsigned char cursec;
-} tdisk_t;
+typedef disk_t tdisk_t;
 
 tdisk_t tdisks[4];
 static int selected = -1;
