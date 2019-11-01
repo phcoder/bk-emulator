@@ -72,6 +72,8 @@ FILE * tracefile;	/* trace goes here */
 
 const char *rompath10, *rompath12, *rompath16;
 
+static int checkpoint(d_word pc);
+
 /*
  * sim_init() - Initialize the cpu registers.
  */
@@ -100,6 +102,140 @@ addtocybuf(int val) {
 	cybufidx = (cybufidx+1) % 1024;
 }
 
+int
+run_cpu_until(register pdp_regs *p, long long max_ticks) {
+	static char buf[80];
+
+	while (ticks < max_ticks) {
+		d_word oldpc;
+
+		register int result;		/* result of execution */
+		int result2;			/* result of error handling */
+		int rtt = 0;			/* rtt don't trap yet flag */
+
+		addtocybuf(p->regs[PC]);
+
+		/*
+		 * Fetch and execute the instruction.
+		 */
+	
+		if (traceflag) {
+			disas(p->regs[PC], buf);
+			if (tracefile) fprintf(tracefile, "%s\t%s\n", buf, state(p));
+			else printf("%s\n", buf);
+		}
+		result = ll_word( p, p->regs[PC], &p->ir );
+		oldpc = p->regs[PC];
+		p->regs[PC] += 2;
+		if (result == OK) {
+			result = itab[p->ir>>6]( p );
+			timing(p);
+		}
+		
+		if (bkmodel && ticks >= ticks_timer) {
+                       if (timer_intr_enabled) {
+                               ev_register(TIMER_PRI, service, 0, 0100);
+                       }
+                       ticks_timer += half_frame_delay;
+               }
+		/*
+		 * Mop up the mess.
+		 */
+
+		if ( result != OK ) {
+			switch( result ) {
+			case BUS_ERROR:			/* vector 4 */
+				ticks += 64;
+			case ODD_ADDRESS:
+				fprintf( stderr, _(" pc=%06o, last branch @ %06o\n"),
+					oldpc, last_branch );
+				result2 = service( (d_word) 04 );
+				break;
+			case CPU_ILLEGAL:		/* vector 10 */
+#undef VERBOSE_ILLEGAL
+#ifdef VERBOSE_ILLEGAL
+				disas(oldpc, buf);
+				fprintf( stderr, 
+				_("Illegal inst. %s, last branch @ %06o\n"),
+					buf, last_branch );
+#endif
+				result2 = service( (d_word) 010 );
+				break;
+			case CPU_BPT:			/* vector 14 */
+				result2 = service( (d_word) 014 );
+				break;
+			case CPU_EMT:			/* vector 30 */
+				result2 = service( (d_word) 030 );
+				break;
+			case CPU_TRAP:			/* vector 34 */
+				result2 = service( (d_word) 034 );
+				break;
+			case CPU_IOT:			/* vector 20 */
+				result2 = service( (d_word) 020 );
+				break;
+			case CPU_WAIT:
+				in_wait_instr = 1;
+				result2 = OK;
+				break;
+			case CPU_RTT:
+				rtt = 1;
+				result2 = OK;
+				break;
+			case CPU_HALT:
+				io_stop_happened = 4;
+				result2 = service( (d_word) 004 );
+				break;
+			default:
+				fprintf( stderr, _("\nUnexpected return.\n") );
+				fprintf( stderr, _("exec=%d pc=%06o ir=%06o\n"),
+					result, oldpc, p->ir );
+				return 0;
+			}
+			if ( result2 != OK ) {
+				fprintf( stderr, _("\nDouble trap @ %06o.\n"), oldpc);
+				lc_word(0177716, &p->regs[PC]);
+				p->regs[PC] &= 0177400;
+				/* p->regs[SP] = 01000;*/	/* whatever */
+			}
+		}
+
+		if (( p->psw & 020) && (rtt == 0 )) {		/* trace bit */
+			if ( service((d_word) 014 ) != OK ) {
+				fprintf( stderr, _("\nDouble trap @ %06o.\n"), p->regs[PC]);
+				lc_word(0177716, &p->regs[PC]);
+				p->regs[PC] &= 0177400;
+				p->regs[SP] = 01000;	/* whatever */
+			}
+		}
+		rtt = 0;
+		p->total++;
+
+		if (nflag)
+		  sound_flush();
+
+				/*
+		 * See if execution should be stopped.  If so
+		 * stop running, otherwise look for events
+		 * to fire.
+		 */
+
+		if ( stop_it ) {
+			fprintf( stderr, _("\nExecution interrupted.\n") );
+			return 0;
+		} else {
+			unsigned priority = ( p->psw >> 5) & 7;
+			if ( pending_interrupts && priority != 7 ) {
+				ev_fire( priority );
+			}
+		}
+		if (checkpoint(p->regs[PC])) {
+			return 0;
+		}
+	}
+	
+	return 1;
+}
+
 /*
  * intr_hand() - Handle SIGINT during execution by breaking
  * back to user interface at the end of the current instruction.
@@ -110,7 +246,7 @@ void intr_hand()
 	stop_it = 1;
 }
 
-int checkpoint(d_word pc)
+static int checkpoint(d_word pc)
 {
     switch(pc) {
     case 0116256:

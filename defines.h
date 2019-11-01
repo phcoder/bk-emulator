@@ -494,7 +494,6 @@ typedef struct {
 extern unsigned long pending_interrupts;
 void ev_fire( int priority );
 void sim_init(void);
-int checkpoint(d_word pc);
 extern int breakpoint;
 extern unsigned char change_req;
 extern unsigned char param_change_line;
