@@ -23,8 +23,7 @@
 #include "SDL/SDL_keysym.h"
 #include "SDL/SDL_events.h"
 #include <ctype.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 #define TTY_VECTOR      060     /* standard vector for console */
 #define TTY_VECTOR2     0274    /* AR2 (ALT) vector for console */

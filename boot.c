@@ -28,8 +28,7 @@
  */
 
 #include "defines.h"
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 /*
  * load_rom() - Read the contents of the ROM into the array. 

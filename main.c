@@ -32,10 +32,9 @@
 #include "scr.h"
 #include "conf.h"
 #include <SDL/SDL.h>
-#include <libintl.h>
+#include "intl.h"
 #include <locale.h>
 #include <sys/time.h>
-#define _(String) gettext (String)
 
 /*
  * Globals.

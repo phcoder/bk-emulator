@@ -3,8 +3,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <libintl.h>
-#define _(String) gettext (String)
 
 unsigned char synth_reg;
 #define SOUND_FREQ 44100

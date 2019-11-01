@@ -2,8 +2,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 unsigned char tape_read_val = 1, tape_write_val = 0;
 FILE * tape_read_file = NULL;

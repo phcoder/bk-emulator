@@ -16,8 +16,7 @@
 
 #include "defines.h"
 #include <ctype.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 /* Instructions can be prefixed by an uppercase letter:
  * B - branch (signed jump offset)

@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 /* let's operate on 819200 byte images first */
 #define SECSIZE 512

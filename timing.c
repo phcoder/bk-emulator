@@ -1,6 +1,5 @@
 #include "defines.h"
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 #define REGREG 12
 

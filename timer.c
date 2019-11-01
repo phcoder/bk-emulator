@@ -8,8 +8,7 @@
 #define TIM_DIV16      32
 #define TIM_DIV4       64
 #define TIM_END       128
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 /* Period is such that the cycle duration of the timer counter
  * with both dividers on is almost exactly 3 min (178.95 sec).

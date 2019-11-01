@@ -11,8 +11,8 @@
 
 
 #include "defines.h"
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
+
 
 /* Allows up to 32 different HW interrupts,
  * there can be no more than 1 pending interrupt of each kind.

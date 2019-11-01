@@ -21,9 +21,7 @@
 
 
 #include "defines.h"
-#include <libintl.h>
-#define _(String) gettext (String)
-
+#include "intl.h"
 /*
  * Page mapping, per 8 Kw page. Default is a mapping mimicking BK-0010
  */

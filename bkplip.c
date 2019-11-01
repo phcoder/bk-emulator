@@ -2,8 +2,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 #include <fcntl.h>
 #include <stdlib.h>

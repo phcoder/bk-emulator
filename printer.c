@@ -2,8 +2,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 FILE * io_printer_file = NULL;
 #define STROBE 0400
