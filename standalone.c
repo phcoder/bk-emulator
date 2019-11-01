@@ -217,10 +217,13 @@ by the environment variable BK_PATH.\n"), romdir );
 		run( 1 );			/* go for it */	
 		if (hasgame == 1)
 		{
-			extern ui_load(const char *);
-			ui_load(game_path);
-			ui_start( "1000", 1 );
+		  	FILE *f = fopen(game_path, "r");
 			hasgame = 0;
+			if (!f) {
+			  perror("Error opening file");
+			  continue;
+			}
+			load_and_run(f);
 		}
 		else if (hasexit == 0)
 		{
