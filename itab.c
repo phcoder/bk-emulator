@@ -28,91 +28,9 @@
  */
 
 #include "defines.h"
+#include "ops.h"
 
-extern int illegal();
-extern int adc();
-extern int adcb();
-extern int add();
-extern int ash();
-extern int ashc();
-extern int asl();
-extern int aslb();
-extern int asr();
-extern int asrb();
-extern int bcc();
-extern int bcs();
-extern int beq();
-extern int bge();
-extern int bgt();
-extern int bhi();
-extern int bic();
-extern int bicb();
-extern int bis();
-extern int bisb();
-extern int bit();
-extern int bitb();
-extern int ble();
-extern int blos();
-extern int blt();
-extern int bmi();
-extern int bne();
-extern int bpl();
-extern int bpt();
-extern int br();
-extern int bvc();
-extern int bvs();
-extern int clr();
-extern int clrb();
-extern int ccc();
-extern int cmp();
-extern int cmpb();
-extern int com();
-extern int comb();
-extern int dec();
-extern int decb();
-extern int divide();
-extern int emt();
-extern int halt();
-extern int inc();
-extern int incb();
-extern int iot();
-extern int jmp();
-extern int jsr();
-extern int mark();
-extern int mfpd();
-extern int mfpi();
-extern int mfps();
-extern int mov();
-extern int movb();
-extern int mtpd();
-extern int mtpi();
-extern int mtps();
-extern int mul();
-extern int neg();
-extern int negb();
-extern int busreset();
-extern int rol();
-extern int rolb();
-extern int ror();
-extern int rorb();
-extern int rti();
-extern int rts();
-extern int rtt();
-extern int sbc();
-extern int sbcb();
-extern int scc();
-extern int sob();
-extern int sub();
-extern int swabi();
-extern int sxt();
-extern int trap();
-extern int tst();
-extern int tstb();
-extern int waiti();
-extern int xor();
-extern int fis();
-
-struct _itab sitab0[64] = {
+const _itab_t sitab0[64] = {
 	halt, waiti, rti, bpt, iot, busreset, rtt, illegal,
 	halt, halt, halt, halt, halt, halt, halt, halt,
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal,
@@ -123,7 +41,7 @@ struct _itab sitab0[64] = {
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal
 };
 
-struct _itab sitab1[64] = {
+const _itab_t sitab1[64] = {
 	rts, rts, rts, rts, rts, rts, rts, rts,
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal,
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal,
@@ -137,16 +55,16 @@ struct _itab sitab1[64] = {
 int dositab0( p )
 register pdp_regs *p;
 {
-	return (sitab0[p->ir&077].func)( p );
+	return sitab0[p->ir&077]( p );
 }
 
 int dositab1( p )
 register pdp_regs *p;
 {
-	return (sitab1[p->ir&077].func)( p );
+	return sitab1[p->ir&077]( p );
 }
 
-struct _itab itab[1024] = {
+const _itab_t itab[1024] = {
 /*000*/	dositab0, jmp, dositab1, swabi, br, br, br, br,
 /*001*/	bne, bne, bne, bne, beq, beq, beq, beq,
 /*002*/	bge, bge, bge, bge, blt, blt, blt, blt,

@@ -398,7 +398,7 @@ volatile int stop_it;	/* set when a SIGINT happens during execution */
  * sim_init() - Initialize the cpu registers.
  */
 
-int
+void
 sim_init()
 {
 	int x;
@@ -514,7 +514,7 @@ int flag;
 		oldpc = p->regs[PC];
 		p->regs[PC] += 2;
 		if (result == OK) {
-			result = (itab[p->ir>>6].func)( p );
+			result = (itab[p->ir>>6])( p );
 			timing(p);
 		}
 		

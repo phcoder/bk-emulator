@@ -29,13 +29,13 @@
 
 
 #include "defines.h"
-
+#include "ops.h"
 
 /*
  * adc() - Add Carry Instruction.
  */
 
-adc( p )
+int adc( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -71,7 +71,7 @@ register pdp_regs *p;
  * asl() - Arithmetic Shift Left Instruction.
  */
 
-asl( p )
+int asl( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -100,7 +100,7 @@ register pdp_regs *p;
  * asr() - Arithmetic Shift Right Instruction.
  */
 
-asr( p )
+int asr( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -130,7 +130,7 @@ register pdp_regs *p;
  * clr() - Clear Instruction.
  */
 
-clr( p )
+int clr( p )
 register pdp_regs *p;
 {
 
@@ -145,7 +145,7 @@ register pdp_regs *p;
  * com() - Complement Instrcution.
  */
 
-com( p )
+int com( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -170,7 +170,7 @@ register pdp_regs *p;
  * dec() - Decrement Instrcution.
  */
 
-dec( p )
+int dec( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -198,7 +198,7 @@ register pdp_regs *p;
  * inc() - Increment Instruction.
  */
 
-inc( p )
+int inc( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -226,7 +226,7 @@ register pdp_regs *p;
  * neg() - Negate Instruction.
  */
 
-neg( p )
+int neg( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -259,7 +259,7 @@ register pdp_regs *p;
  * rol() - Rotate Left Instruction.
  */
 
-rol( p )
+int rol( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -293,7 +293,7 @@ register pdp_regs *p;
  * ror() - Rotate Right Instruction.
  */
 
-ror( p )
+int ror( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -327,7 +327,7 @@ register pdp_regs *p;
  * sbc() - Subtract Carry Instruction.
  */
 
-sbc( p )
+int sbc( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -363,7 +363,7 @@ register pdp_regs *p;
  * swabi() - Swap Bytes Instruction.
  */
 
-swabi( p )
+int swabi( p )
 register pdp_regs *p;
 {
 	d_word data1;
@@ -391,7 +391,7 @@ register pdp_regs *p;
  * sxt() - Sign Extend Instruction.
  */
 
-sxt( p )
+int sxt( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -413,7 +413,7 @@ register pdp_regs *p;
  * tst() - Test Instruction.
  */
 
-tst( p )
+int tst( p )
 register pdp_regs *p;
 {
 	d_word data;
@@ -435,7 +435,7 @@ register pdp_regs *p;
  * tstb() - Test Byte Instruction.
  */
 
-tstb( p )
+int tstb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -457,7 +457,7 @@ register pdp_regs *p;
  * aslb() - Arithmetic Shift Left Byte Instruction.
  */
 
-aslb( p )
+int aslb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -486,7 +486,7 @@ register pdp_regs *p;
  * asrb() - Arithmetic Shift Right Byte Instruction.
  */
 
-asrb( p )
+int asrb( p )
 pdp_regs *p;
 {
 	d_byte data;
@@ -515,7 +515,7 @@ pdp_regs *p;
  * clrb() - Clear Byte Instruction.
  */
 
-clrb( p )
+int clrb( p )
 register pdp_regs *p;
 {
 	CLR_CC_ALL();
@@ -529,7 +529,7 @@ register pdp_regs *p;
  * comb() - Complement Byte Instrcution.
  */
 
-comb( p )
+int comb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -554,7 +554,7 @@ register pdp_regs *p;
  * decb() - Decrement Byte Instrcution.
  */
 
-decb( p )
+int decb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -582,7 +582,7 @@ register pdp_regs *p;
  * incb() - Increment Byte Instruction.
  */
 
-incb( p )
+int incb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -610,7 +610,7 @@ register pdp_regs *p;
  * negb() - Negate Byte Instruction.
  */
 
-negb( p )
+int negb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -643,7 +643,7 @@ register pdp_regs *p;
  * rolb() - Rotate Left Byte Instruction.
  */
 
-rolb( p )
+int rolb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -677,7 +677,7 @@ register pdp_regs *p;
  * rorb() - Rotate Right Byte Instruction.
  */
 
-rorb( p )
+int rorb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -711,7 +711,7 @@ register pdp_regs *p;
  * adcb() - Add Carry Byte Instruction.
  */
 
-adcb( p )
+int adcb( p )
 register pdp_regs *p;
 {
 	d_byte data;
@@ -747,7 +747,7 @@ register pdp_regs *p;
  * sbcb() - Subtract Carry Byte Instruction.
  */
 
-sbcb( p )
+int sbcb( p )
 register pdp_regs *p;
 {
 	d_byte data;

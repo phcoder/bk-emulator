@@ -285,7 +285,7 @@ void fake_read_strobe() {
 
 void
 fake_write_file() {
-	c_addr base;
+	d_word base;
 	lc_word(0306, &base);
 	get_emt36_filename();
 	tape_write_file = fopen(unix_filename, "w");

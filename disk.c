@@ -14,22 +14,6 @@
 #define O_BINARY 0
 #endif
 
-/* Why bother, let's memory-map the files! */
-typedef struct {
-	unsigned int length;
-	unsigned short * image;
-	unsigned short * ptr;
-	unsigned char track;
-	unsigned char side;
-	unsigned char ro;
-	unsigned char motor;
-	unsigned char inprogress;
-	unsigned char crc;
-	unsigned char need_sidetrk;
-	unsigned char need_sectsize;
-	unsigned char cursec;
-} disk_t;
-
 disk_t disks[4];
 static int selected = -1;
 
@@ -38,7 +22,7 @@ void do_disk_io(int drive, int blkno, int nwords, int ioaddr);
 /* Pretty much had to rewrite it for portability rofl. - Gameblabla 
  * This does not seem to handle writes to the file.
  * */
-void disk_open(disk_t * pdt, char * name) 
+void disk_open(disk_t * pdt, const char * name) 
 {
 	FILE* fp;
 	int result;
@@ -99,7 +83,7 @@ void disk_open(disk_t * pdt, char * name)
 
 /* Are there any interrupts to open or close ? */
 
-int disk_init() {
+void disk_init() {
 	static char init_done = 0;
 	int i;
 	if (!init_done) {
@@ -115,7 +99,6 @@ int disk_init() {
 		disks[i].motor = disks[i].inprogress = 0;
 	}
 	selected = -1;
-	return OK;
 }
 
 void disk_finish() {
@@ -134,7 +117,6 @@ void disk_finish() {
 /* The index hole appears for 1 ms every 100 ms,
  */
 int index_flag() {
-	extern double ticks;
 	unsigned msec = ticks / (TICK_RATE/1000);
 	return (msec % 100 == 0);
 }
@@ -145,7 +127,7 @@ int index_flag() {
 #define DATAFLAG 0120773
 #define ENDFLAG 0120770
 
-unsigned short index_marker[] = {
+static const unsigned short index_marker[] = {
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,  
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, 
 0, 0, 0, 0, 0, 0, LAST, IDXFLAG
@@ -153,13 +135,13 @@ FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 
 #define IDXMRKLEN (sizeof(index_marker)/sizeof(*index_marker))
 
-unsigned short data_marker[] = {
+static const unsigned short data_marker[] = {
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 FILLER, FILLER, FILLER, 0, 0, 0, 0, 0, 0, LAST, DATAFLAG
 };
 #define DATAMRKLEN (sizeof(data_marker)/sizeof(*data_marker))
 
-unsigned short end_marker[] = {
+static const unsigned short end_marker[] = {
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 FILLER, FILLER, 0, 0, 0, 0, 0, 0, LAST, ENDFLAG
@@ -232,7 +214,7 @@ disk_read(c_addr addr, d_word *word) {
 			pdp.regs[PC], *word);
 #endif
 		} else {
-			static dummy = 0x5555;
+			static int dummy = 0x5555;
 			fprintf(stderr, "?");
 			// fprintf(stderr, _("Reading 177132 when no I/O is progress?\n"));
 			*word = dummy = ~dummy;

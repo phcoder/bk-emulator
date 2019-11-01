@@ -54,7 +54,8 @@ unsigned long pdp_mem_map;
 /*
  * The QBUS memory map.
  */
-int q_null(), q_err(c_addr, d_word), q_errb(c_addr, d_byte),
+static void q_null();
+int q_err(c_addr, d_word), q_errb(c_addr, d_byte),
  port_read(c_addr, d_word*), port_write(c_addr, d_word), port_bwrite(c_addr, d_byte);
 int secret_read(c_addr, d_word*), secret_write(c_addr, d_word), secret_bwrite(c_addr, d_byte);
 int force_read( c_addr, d_word*), terak_read(c_addr, d_word*);
@@ -62,7 +63,7 @@ int force_read( c_addr, d_word*), terak_read(c_addr, d_word*);
 typedef struct {
 	c_addr start;
 	c_addr size;
-	int (*ifunc)();
+	void (*ifunc)();
 	int (*rfunc)(c_addr, d_word*);
 	int (*wfunc)(c_addr, d_word);
 	int (*bwfunc)(c_addr, d_byte);
@@ -87,7 +88,7 @@ pdp_qmap qmap_bk[] = {
 	{ 0, 0, 0, 0, 0, 0 }
 };
 
-tcons_read(c_addr a, d_word *d) {
+int tcons_read(c_addr a, d_word *d) {
 	switch (a & 077) {
 	case 064:
 		*d = 0200;
@@ -100,7 +101,7 @@ tcons_read(c_addr a, d_word *d) {
 	return OK;
 }
 
-tcons_write(c_addr a, d_word d) {
+int tcons_write(c_addr a, d_word d) {
 	switch (a & 077) {
 	case 064:
 		fprintf(stderr, "Writing %06o: %06o\n", a, d);
@@ -116,11 +117,15 @@ tcons_write(c_addr a, d_word d) {
 	return OK;
 }
 
+int tcons_writeb(c_addr a, unsigned char d) {
+        return tcons_write(a, d);
+}
+
 pdp_qmap qmap_terak[] = {
 	{ TERAK_DISK_REG, TERAK_DISK_SIZE, tdisk_init, tdisk_read,
 	tdisk_write, tdisk_bwrite },
-	{ 0177564, 4, q_null, tcons_read, tcons_write, tcons_write }, 
-	{ 0177764, 4, q_null, tcons_read, tcons_write, tcons_write }, 
+	{ 0177564, 4, q_null, tcons_read, tcons_write, tcons_writeb }, 
+	{ 0177764, 4, q_null, tcons_read, tcons_write, tcons_writeb }, 
 	{ 0177744, 2, q_null, port_read, port_write, port_bwrite },
 	{ 0177560, 2, q_null, port_read, port_write, port_bwrite },
 	{ 0173000, 0200, q_null, terak_read, q_err, q_errb },
@@ -171,7 +176,7 @@ int port_bwrite(c_addr a, d_byte d) {
 	return OK;	/* goes nowhere */
 }
 
-secret_read(addr, word)
+int secret_read(addr, word)
 c_addr addr;
 d_word *word;
 {
@@ -208,9 +213,7 @@ int secret_bwrite(c_addr a, d_byte d) {
  */
 
 int
-lc_word( addr, word )
-c_addr addr;
-d_word *word;
+lc_word(c_addr addr, d_word *word)
 {
 	int i;
 
@@ -329,11 +332,7 @@ void pagereg_bwrite(d_byte byte) {
  * sc_word() - Store a word at the given core address.
  */
 
-int
-sc_word( addr, word )
-c_addr addr;
-d_word word;
-{
+int sc_word(c_addr addr, d_word word) {
 	int i;
 
 	addr &= ~1;
@@ -365,10 +364,7 @@ d_word word;
  */
 
 int
-ll_byte( p, baddr, byte )
-register pdp_regs *p;
-d_word baddr;
-d_byte *byte;
+ll_byte( register pdp_regs *p, d_word baddr, d_byte *byte )
 {
 	d_word word;
 	d_word laddr;
@@ -405,10 +401,7 @@ d_byte *byte;
  */
 
 int
-sl_byte( p, laddr, byte )
-register pdp_regs *p;
-d_word laddr;
-d_byte byte;
+sl_byte(register pdp_regs *p, d_word laddr, d_byte byte)
 {
 	d_word t;
 	int i;
@@ -443,7 +436,7 @@ d_byte byte;
  * mem_init() - Initialize the memory.
  */
 
-mem_init()
+void mem_init()
 {
 	int x;
 	if (terak) {
@@ -500,9 +493,8 @@ mem_init()
  * q_null() - Null QBUS device switch handler.
  */
 
-int q_null()
+static void q_null()
 {
-	return OK;
 }
 
 /*
@@ -525,7 +517,7 @@ int q_errb(c_addr x, d_byte y)
  * q_reset() - Reset the UNIBUS devices.
  */
 
-q_reset()
+void q_reset()
 {
 	int i;
 

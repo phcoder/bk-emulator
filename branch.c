@@ -29,17 +29,14 @@
 
 
 #include "defines.h"
-
+#include "ops.h"
 
 /*
  * brx() - Simple Branch Instructions.
  */
 
 int
-brx( p, clear, set )
-register pdp_regs *p;
-unsigned clear;
-unsigned set;
+brx(register pdp_regs *p, unsigned clear, unsigned set)
 {
 	d_word offset;
 

@@ -10,8 +10,7 @@ unsigned short mouse_up, mouse_right, mouse_down,
 
 int relx, rely;
 
-int
-mouse_init() {
+void mouse_init() {
 	switch (mouseflag) {
 	case 1: /* mouse in lower byte */
 		mouse_up = 1;
@@ -85,7 +84,7 @@ int mouse_write(c_addr addr, d_word word) {
 	return OK;
 }
 
-mouse_bwrite(c_addr addr, d_byte byte) {
+int mouse_bwrite(c_addr addr, d_byte byte) {
         d_word offset = addr & 1;
         d_word word;
         mouse_read(addr & ~1, &word);

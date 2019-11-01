@@ -29,9 +29,8 @@ event events[NUM_PRI];
  * ev_init() - Initialize the event system.
  */
 
-ev_init()
+void ev_init()
 {
-	int x;
 	pending_interrupts = 0;
 }
 
@@ -39,12 +38,10 @@ ev_init()
  * ev_register() - Register an event.
  */
 
-int
-ev_register( priority, handler, delay, info )
-unsigned priority;
-int (*handler)(); 
-unsigned long delay;	/* in clock ticks */
-d_word info;
+
+void ev_register(unsigned priority, int (*handler)(d_word),
+		 unsigned long delay,	/* in clock ticks */
+		 d_word info)
 {
 
 	if (pending_interrupts & (1 << priority)) {
@@ -71,7 +68,7 @@ d_word info;
  * priority list.
  */
 
-ev_fire( int priority )
+void ev_fire( int priority )
 {
 	int x;
 	unsigned long mask;
@@ -120,11 +117,9 @@ d_word vector;
 	int result;
 	d_word oldpsw;
 	d_word oldpc;
-	d_word oldmode;
-	d_word newmode;
-	c_addr vaddr;
 	d_word newpsw;
 	d_word newpc;
+	d_word oldmode;
 
 	last_branch = p->regs[PC];
 	oldmode = ( p->psw & 0140000 ) >> 14;
@@ -163,13 +158,11 @@ d_word vector;
  * rti() - Return from Interrupt Instruction.
  */
 
-rti( p )
+int rti( p )
 register pdp_regs *p;
 {
 	d_word newpsw;
 	d_word newpc;
-	d_word oldmode;
-	d_word newmode;
 	int result;
 
 	last_branch = p->regs[PC];
@@ -189,13 +182,11 @@ register pdp_regs *p;
  * rtt() - Return from Interrupt Instruction.
  */
 
-rtt( p )
+int rtt( p )
 register pdp_regs *p;
 {
 	d_word newpsw;
 	d_word newpc;
-	d_word oldmode;
-	d_word newmode;
 	int result;
 
 	last_branch = p->regs[PC];

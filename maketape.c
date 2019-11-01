@@ -1,6 +1,8 @@
 #include <stdio.h>
 #define SYNCH 1000
 #include <libintl.h>
+#include <string.h>
+#include <stdlib.h>
 #include <locale.h>
 #define _(String) gettext (String)
 

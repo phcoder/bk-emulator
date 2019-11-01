@@ -29,7 +29,7 @@
 
 
 #include "defines.h"
-
+#include "ops.h"
 
 /*
  * mov() - Move Instruction.  Move operations with registers

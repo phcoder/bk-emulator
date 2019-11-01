@@ -49,7 +49,7 @@ void callback(void * dummy, Uint8 * outbuf, int len)
 }
 
 /* Called after every instruction */
-sound_flush() {
+void sound_flush() {
 	int i;
 	if (fullspeed && io_sound_age >= io_max_sound_age && covox_age >= io_max_sound_age) {
 		if (sound_buf[cur_buf].ptr != 0) 
@@ -87,7 +87,7 @@ void sound_finish() {
 
 SDL_AudioSpec desired;
 
-sound_init() {
+void sound_init() {
 	static init_done = 0;
 	int iarg, i;
 	if (!nflag)

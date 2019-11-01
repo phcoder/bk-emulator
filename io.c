@@ -13,13 +13,12 @@ unsigned io_sound_val = 0;
 flag_t io_stop_happened = 0;
 flag_t telegraph_enabled = 0; 	/* Default */
 
-io_init() {
+void io_init() {
 	sound_init();
 	tape_init();
-	return OK;
 }
 
-io_read(addr, word)
+int io_read(addr, word)
 c_addr addr;
 d_word *word;
 {
@@ -39,7 +38,7 @@ d_word *word;
 }
 
 /* Include tape drive relay into sound as well */
-io_write(addr, word)
+int io_write(addr, word)
 c_addr addr;
 d_word word;
 {
@@ -62,7 +61,7 @@ d_word word;
 	return OK;
 }
 
-io_bwrite(c_addr addr, d_byte byte) {
+int io_bwrite(c_addr addr, d_byte byte) {
 	d_word offset = addr - IO_REG;
 	unsigned oldval = io_sound_val;
 	if (offset == 0) {
@@ -90,11 +89,11 @@ FILE * irpslog = 0;
 enum { IdleL, NameL, HeaderL, BodyL, TailL } lstate = 0;
 unsigned char rdbuf = 0;
 
-line_init() {
+void line_init() {
 	irpslog = fopen("irps.log", "w");
 }
 
-line_read(addr, word)
+int line_read(addr, word)
 c_addr addr;
 d_word *word;
 {
@@ -114,7 +113,7 @@ d_word *word;
 	return OK;
 }
 
-line_write(addr, word)
+int line_write(addr, word)
 c_addr addr;
 d_word word;
 {
@@ -134,7 +133,7 @@ d_word word;
 int subcnt;
 unsigned char fname[11];
 unsigned short file_addr, file_len;
-line_bwrite(addr, byte)
+int line_bwrite(addr, byte)
 c_addr addr;
 d_byte byte;
 {

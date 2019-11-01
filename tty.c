@@ -131,10 +131,8 @@ tty_open()
  * tty_init() - Initialize the BK-0010 keyboard
  */
 
-int
-tty_init()
+void tty_init()
 {
-	int i;
 	unsigned short old_scroll = tty_scroll;
 	tty_reg = 0;
 	tty_data = 0;
@@ -183,7 +181,6 @@ d_word word;
 {
 	d_word offset = addr & 07;
 	d_word old_scroll;
-	char c;
 
 	switch( offset ) {
 	case 0:
@@ -227,7 +224,6 @@ d_byte byte;
 {
 	d_word offset = addr & 07;
 	d_word old_scroll;
-	char c;
 
 	switch( offset ) {
 	case 0:
@@ -276,14 +272,14 @@ d_byte byte;
  * tty_finish()
  */
 
-tty_finish( c )
-unsigned char c;
+int tty_finish( d_word c )
 {
 	service(( c & 0200 ) ? TTY_VECTOR2 : TTY_VECTOR);
 	tty_pending_int = 0;
+	return OK;
 }
 
-stop_key() {
+void stop_key() {
     io_stop_happened = 4;
     service(04);
 }
@@ -299,7 +295,7 @@ stop_key() {
 */
 
 static int ar2 = 0;
-tty_keyevent(SDL_Event * pev) {
+void tty_keyevent(SDL_Event * pev) {
 	int k, c;
 	k = pev->key.keysym.sym;
 

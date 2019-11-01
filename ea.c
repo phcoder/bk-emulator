@@ -38,9 +38,7 @@
  * load_ea()
  */
 
-load_ea( p, addr )
-register pdp_regs *p;
-d_word *addr;
+int load_ea( register pdp_regs *p, d_word *addr)
 {
 	d_word indirect;
 	int result;
@@ -104,9 +102,7 @@ d_word *addr;
  * pop()
  */
 
-pop( p, data )
-register pdp_regs *p;
-d_word *data;
+int pop(register pdp_regs *p, d_word *data)
 {
 	int result;
 
@@ -121,9 +117,7 @@ d_word *data;
  * push()
  */
 
-push( p, data )
-register pdp_regs *p;
-d_word data;
+int push(register pdp_regs *p, d_word data)
 {
 	p->regs[SP] -= 2;
 	return sl_word( p, p->regs[SP], data );
@@ -134,9 +128,7 @@ d_word data;
  * loadb_dst()
  */
 
-loadb_dst( p, data )
-register pdp_regs *p;
-d_byte *data;
+int loadb_dst(register pdp_regs *p, d_byte *data)
 {
 	d_word addr, indirect;
 	int result;
@@ -224,9 +216,7 @@ d_byte *data;
  * loadb_src()
  */
 
-loadb_src( p, data )
-register pdp_regs *p;
-d_byte *data;
+int loadb_src( register pdp_regs *p, d_byte *data)
 {
 	d_word addr, indirect;
 	int result;
@@ -307,9 +297,7 @@ d_byte *data;
  * storeb_dst() -
  */
 
-storeb_dst( p, data )
-register pdp_regs *p;
-d_byte data;
+int storeb_dst(register pdp_regs *p, d_byte data)
 {
 	d_word addr, indirect;
 	int result;
@@ -391,9 +379,7 @@ d_byte data;
  * storeb_dst_2() -
  */
 
-storeb_dst_2( p, data )
-register pdp_regs *p;
-d_byte data;
+int storeb_dst_2(register pdp_regs *p, d_byte data)
 {
 	if (DST_MODE == 0) {
 		p->regs[DST_REG] &= 0177400;
@@ -408,9 +394,7 @@ d_byte data;
  * load_src()
  */
 
-load_src( p, data )
-register pdp_regs *p;
-d_word *data;
+int load_src(register pdp_regs *p, d_word *data)
 {
 	d_word addr, indirect;
 	int result;
@@ -485,9 +469,7 @@ d_word *data;
  * store_dst() -
  */
 
-store_dst( p, data )
-register pdp_regs *p;
-d_word data;
+int store_dst(register pdp_regs *p, d_word data)
 {
 	d_word addr, indirect;
 	int result;
@@ -562,9 +544,7 @@ d_word data;
  * load_dst()
  */
 
-load_dst( p, data )
-register pdp_regs *p;
-d_word *data;
+int load_dst(register pdp_regs *p, d_word *data)
 {
 	d_word addr, indirect;
 	int result;
@@ -646,9 +626,7 @@ d_word *data;
  * store_dst_2() -
  */
 
-store_dst_2( p, data )
-register pdp_regs *p;
-d_word data;
+int store_dst_2( register pdp_regs *p, d_word data)
 {
 	if (DST_MODE == 0) {
 		p->regs[DST_REG] = data;

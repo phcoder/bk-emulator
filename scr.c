@@ -179,7 +179,7 @@ setup_bases() {
     }
 }
 
-scr_init() {
+void scr_init() {
 
     extern unsigned bk_icon[];
     extern unsigned char * compute_icon_mask();

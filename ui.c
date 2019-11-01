@@ -343,7 +343,6 @@ ui_start( s, n )
 char *s;
 int n;
 {
-	extern disas(c_addr pc, char * dest);
 	static char buf[80];
 	d_word word;
 	int good;
@@ -467,7 +466,6 @@ void ui_load(const char *s)
 ui_asm( s )
 char *s;
 {
-	extern disas(c_addr pc, char * dest);
 	static char buf[80];
 	c_addr addr;
 	c_addr new;
@@ -513,8 +511,6 @@ ui_viewbuf ( char * s )
 	d_word word;
 	int good;
 	char buf[80];
-	extern int cybuf[1024];
-	extern int cybufidx;
 	s = rd_d_word( s, &word, &good );
 	if (good == FALSE ) {
 		fprintf(stderr, _("Bad address\n"));

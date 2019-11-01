@@ -10,9 +10,6 @@
 #define SECSIZE 64 /* words */
 #define SECPERTRACK 26
 #define MAXTRACK 76
-typedef enum {
-	nopD, rtcD, stepinD, stepoutD, readtsD, readD, writeD, delD
-} disk_cmd;
 
 typedef enum {
 	enF = 1, headF = 020, intrF = 0100, doneF = 0200,
@@ -65,7 +62,7 @@ void tdisk_open(tdisk_t * pdt, char * name) {
 
 /* Are there any interrupts to open or close ? */
 
-int tdisk_init() {
+void tdisk_init() {
 	static char init_done = 0;
 	int i;
 	if (!init_done) {
@@ -82,7 +79,6 @@ int tdisk_init() {
 		tdisks[i].inprogress = 0;
 	}
 	selected = -1;
-	return OK;
 }
 
 void tdisk_finish() {
@@ -106,7 +102,6 @@ int
 tdisk_read(c_addr addr, d_word *word) {
 	d_word offset = addr - TERAK_DISK_REG;
 	tdisk_t * pdt = &tdisks[selected];
-	int index;
 	switch(offset) {
 	case 0: /* status */
 		if (selected == -1) {

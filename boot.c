@@ -36,7 +36,7 @@
  * Used for BK-0010 style ROM - stores into the mapped memory.
  */
 
-void load_rom(unsigned start, char * rompath, unsigned min_size, unsigned max_size) {
+void load_rom(unsigned start, const char * rompath, unsigned min_size, unsigned max_size) {
 	char * path;
 	int i;
 	extern unsigned long pdp_ram_map;
@@ -83,7 +83,7 @@ void load_rom(unsigned start, char * rompath, unsigned min_size, unsigned max_si
 /*
  * Loads BK-0011 ROM into the givem ROM block from a given offset.
  */
-void load_rom11(d_word * rom, int byte_off, char * rompath, int byte_size) {
+void load_rom11(d_word * rombuf, int byte_off, const char * rompath, int byte_size) {
 	char * path;
 	int i;
 
@@ -105,14 +105,14 @@ void load_rom11(d_word * rom, int byte_off, char * rompath, int byte_size) {
 		fprintf(stderr, _("Couldn't open file.\n"));
 		exit(1);
 	}
-	rom += byte_off/2;
-	for (i = 0; i < byte_size/2; i++, rom++) {
+	rombuf += byte_off/2;
+	for (i = 0; i < byte_size/2; i++, rombuf++) {
 		int lobyte = getc(romf);
 		int hibyte = getc(romf);
 		d_word data;
 		if (hibyte < 0) break;
 		data = lobyte | hibyte<<8;
-		*rom = data;
+		*rombuf = data;
 	}
 	if (i < byte_size/2) {
 		fprintf(stderr, _("Incomplete or damaged file.\n"));
@@ -123,7 +123,7 @@ void load_rom11(d_word * rom, int byte_off, char * rompath, int byte_size) {
         fprintf(stderr, _("Done.\n"));
 }
 
-int
+void
 boot_init()
 {
 	static unsigned char boot_done = 0;
