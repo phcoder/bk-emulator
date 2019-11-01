@@ -782,3 +782,39 @@ char *monitor11help = _("BK0011M BOS commands:\n\n\
     break;
     }
 }
+
+int load_file(FILE *f, int addr) {
+  	int len;
+	d_byte c1, c2;
+
+  	c1 = fgetc(f);
+	c2 = fgetc(f);
+	if (-1 == addr)
+	    addr = c2 << 8 | c1;
+	c1 = fgetc(f);
+	c2 = fgetc(f);
+	len = c2 << 8 | c1;
+	int addr0 = addr;
+	fprintf(stderr, _("Reading file into %06o... "), addr);
+	/* the file is in little-endian format */
+	while (len > 0 && !feof(f)) {
+		c1 = fgetc(f);
+		c2 = fgetc(f);
+		if (OK != sc_word(addr, c2 << 8 | c1)) {
+		    break;
+		}
+		addr += 2;
+		len -= 2;
+	}
+	fprintf(stderr, _("Done.\nLast filled address is %06o\n"), addr - 2);
+	return addr0;
+}
+
+void load_and_run(FILE *f) {
+	int addr0 = load_file(f, -1);
+	if (addr0 < 01000) {
+		lc_word(00776, &pdp.regs[PC]);
+	} else
+		pdp.regs[PC] = 01000;
+	sc_word(0320, 3);
+}

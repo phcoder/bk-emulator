@@ -422,36 +422,7 @@ void ui_load(const char *s)
 		perror(s);
 		return;
 	}
-	c1 = fgetc(f);
-	c2 = fgetc(f);
-	if (-1 == addr)
-	    addr = c2 << 8 | c1;
-	c1 = fgetc(f);
-	c2 = fgetc(f);
-	len = c2 << 8 | c1;
-	fprintf(stderr, _("Reading %s into %06o... "), s, addr);
-	if (addr < 01000) {
-	    fprintf(stderr, _("Possible start addresses:  "));
-	    do {
-		    c1 = fgetc(f);
-		    c2 = fgetc(f);
-		    fprintf(stderr, "%06o ", c2 << 8 | c1);
-		    addr += 2;
-		    len -= 2;
-	    } while (len > 0 && addr < 01000 && !feof(f));
-
-	}
-	/* the file is in little-endian format */
-	while (len > 0 && !feof(f)) {
-		c1 = fgetc(f);
-		c2 = fgetc(f);
-		if (OK != sc_word(addr, c2 << 8 | c1)) {
-		    break;
-		}
-		addr += 2;
-		len -= 2;
-	}
-	fprintf(stderr, _("Done.\nLast filled address is %06o\n"), addr - 2);
+	load_file(f, addr);
 	scr_dirty = 1;
 	scr_flush();
 }
