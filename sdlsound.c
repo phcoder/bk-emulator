@@ -6,35 +6,28 @@
 #include <libintl.h>
 #define _(String) gettext (String)
 
-//#define SOUND_EXPONENT	(8+io_sound_freq/20000)
-//#define SOUND_BUFSIZE   (1<<SOUND_EXPONENT)		/* about 1/43 sec */
-#define SOUND_BUFSIZE 512
-
-#define NUMBUF 2
+#define SOUND_BUFSIZE 1024
+#define SAMPLE_SIZE 2
 
 typedef struct {
 	short * buf;
-	unsigned int ptr;
+	int inptr, outptr;
 } sound_buf_t;
 
-sound_buf_t sound_buf[NUMBUF];
-unsigned io_sound_bufsize;
-
-int cur_buf;
-
+static sound_buf_t sound_buf;
 static SDL_sem * sem;
 
 static void callback(void * dummy, Uint8 * outbuf, int len)
 {
-	int i;
-	static int cur_out_buf;
-	if (SDL_SemValue(sem) == NUMBUF) {
-		// Underflow: TODO fill the buffer with silence
-		// fprintf(stderr, "!");
-		return;
-	}
-	memcpy(outbuf, sound_buf[cur_out_buf].buf, len);
-	cur_out_buf = (cur_out_buf + 1) % NUMBUF;
+        int len_samples = len / SAMPLE_SIZE;
+        int normalized = sound_buf.outptr % SOUND_BUFSIZE;
+        int prewrap = SOUND_BUFSIZE - normalized;
+        if (prewrap > len_samples)
+          prewrap = len_samples;
+	memcpy(outbuf, &sound_buf.buf[normalized], prewrap * SAMPLE_SIZE);
+        memcpy(outbuf + prewrap * SAMPLE_SIZE, &sound_buf.buf[0],
+               (len_samples - prewrap) * SAMPLE_SIZE);
+        sound_buf.outptr += len_samples;
 	SDL_SemPost(sem);
 }
 
@@ -47,32 +40,30 @@ static void sound_finish() {
 static SDL_AudioSpec desired;
 
 void platform_sound_flush() {
-	if (sound_buf[cur_buf].ptr != 0) {
+	while (sound_buf.inptr - sound_buf.outptr > SOUND_BUFSIZE / 2) {
 		SDL_SemWait(sem);
-		sound_buf[cur_buf].ptr = 0;
-		cur_buf = (cur_buf + 1) % NUMBUF;
 	}
 }
 
 void sound_write_sample(short val) {
-	short * p = &sound_buf[cur_buf].buf[sound_buf[cur_buf].ptr++];
-	if (sound_buf[cur_buf].buf == NULL)
+  short * p = &sound_buf.buf[sound_buf.inptr++ % SOUND_BUFSIZE];
+	if (sound_buf.buf == NULL)
 	  return;
 	*p = val;
-	if (io_sound_bufsize == sound_buf[cur_buf].ptr) {
+	if (sound_buf.inptr >= sound_buf.outptr + SOUND_BUFSIZE) {
 		platform_sound_flush();
 	}
 }
 
 void sound_discard() {
-	sound_buf[cur_buf].ptr = 0;
+	sound_buf.outptr = sound_buf.inptr;
 }
 
 void platform_sound_init() {
 	int iarg, i;
 
 	if (fullspeed) {
-		io_max_sound_age = 2 * SOUND_BUFSIZE;
+		io_max_sound_age = SOUND_BUFSIZE;
 		/* otherwise UINT_MAX */
 	}
 
@@ -85,7 +76,7 @@ void platform_sound_init() {
 	desired.format = 16;
 	desired.channels = 1;
 	desired.freq = io_sound_freq;
-	desired.samples = io_sound_bufsize = SOUND_BUFSIZE;
+	desired.samples = SOUND_BUFSIZE / 2;
 	desired.callback = callback;
 	if (-1 == SDL_OpenAudio(&desired, 0)) {
 		fprintf(stderr, _("Failed to initialize sound, freq %d, %d samples\n"), io_sound_freq, SOUND_BUFSIZE);
@@ -93,13 +84,12 @@ void platform_sound_init() {
 		return;
 	}
 
-	sem = SDL_CreateSemaphore(NUMBUF);
+	sem = SDL_CreateSemaphore(2);
 
-	for (i = 0; i < NUMBUF; i++) {
-		sound_buf[i].ptr = 0;
-		sound_buf[i].buf = malloc(io_sound_bufsize * sizeof(short));
-	}
-	if (!sound_buf[NUMBUF-1].buf) {
+        sound_buf.inptr = 0;
+        sound_buf.outptr = 0;
+        sound_buf.buf = malloc(SOUND_BUFSIZE * SAMPLE_SIZE);
+	if (!sound_buf.buf) {
 		fprintf(stderr, _("Failed to allocate sound buffers\n"));
 		exit(1);
 	}
