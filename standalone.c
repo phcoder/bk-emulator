@@ -45,6 +45,7 @@ flag_t covoxflag;	/* covox flag */
 flag_t synthflag;	/* AY-3-8910 flag */
 flag_t plipflag;	/* PLIP flag */
 flag_t turboflag;	/* "Turbo" mode with doubled clock speed */
+flag_t joystickflag;
 
 long long ticks_screen = 0;
 unsigned int hasexit = 0;
@@ -86,6 +87,7 @@ char **argv;
 		fprintf( stderr, _("   -v        Enable Covox\n") );
 		fprintf( stderr, _("   -y        Enable AY-3-8910\n") );
 		fprintf( stderr, _("   -m        Enable mouse\n") );
+                fprintf( stderr, _("   -j        Enable joystick\n") );
 		fprintf( stderr, _("   -S        Full speed mode\n") );
 		fprintf( stderr, _("   -s        \"TURBO\" mode (Real overclocked BK)\n") );
 		fprintf( stderr, _("   -R<file>  Specify an alternative ROM file @ 120000.\n") );
@@ -154,7 +156,11 @@ by the environment variable BK_PATH.\n"), romdir );
 
 	printf( _("Initializing SDL.\n") );
 
-	if((SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)==-1)) {
+        Uint32 sdlflags = SDL_INIT_VIDEO|SDL_INIT_TIMER;
+        if (joystickflag)
+          sdlflags |= SDL_INIT_JOYSTICK;
+
+	if((SDL_Init(sdlflags)==-1)) {
 		printf( _("Could not initialize SDL: %s.\n"), SDL_GetError());
 		exit(-1);
 	}
@@ -169,6 +175,8 @@ by the environment variable BK_PATH.\n"), romdir );
 	fake_disk &= bkmodel >= 2;
 	terak = bkmodel == 9;
 	bkmodel = bkmodel >= 3;
+	if (joystickflag)
+	  joystick_init();
 	tty_open();             /* initialize the tty stuff */
 	ev_init();		/* initialize the event system */
 	sim_init();		/* ...the simulated cpu */
@@ -180,6 +188,8 @@ by the environment variable BK_PATH.\n"), romdir );
 	} else {
 	if (mouseflag)
 		plug_mouse();
+        if (joystickflag)
+		plug_joystick();
 	if (printer_file)
 		plug_printer();
 	if (covoxflag)
@@ -292,6 +302,9 @@ char **argv;
 				break;
 			case 'm':
 				mouseflag = *(farg+1) ? *(farg+1)-'0' : 1;
+				break;
+                        case 'j':
+				joystickflag = *(farg+1) ? *(farg+1)-'0' : 1;
 				break;
 			case 'p':
 				plipflag = 1;

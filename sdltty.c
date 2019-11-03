@@ -11,7 +11,41 @@ int special_keys[SDLK_LAST], shifted[256];
 
 int grab_mode;
 
+static int joystick_state_buttons = 0, joystick_state_hat = 0;
+
 void tty_keyevent(int c);
+
+void
+joystick_event(SDL_Event * pev) {
+        switch (pev->type) {
+        case SDL_JOYBUTTONDOWN:
+                joystick_state_buttons |= JOYSTICK_BUTTON(pev->jbutton.button);
+                break;
+        case SDL_JOYBUTTONUP:
+                joystick_state_buttons &= ~(JOYSTICK_BUTTON(pev->jbutton.button));
+                break;
+        case SDL_JOYHATMOTION: {
+                int hat = pev->jhat.value;
+                int newval = 0;
+                if (hat & SDL_HAT_UP)
+                        newval |= JOYSTICK_UP;
+                if (hat & SDL_HAT_DOWN)
+                        newval |= JOYSTICK_DOWN;
+                if (hat & SDL_HAT_LEFT)
+                        newval |= JOYSTICK_LEFT;
+                if (hat & SDL_HAT_RIGHT)
+                        newval |= JOYSTICK_RIGHT;
+                joystick_state_hat = newval;
+        }
+        }
+}
+
+void platform_joystick_init() {
+}
+
+d_word platform_joystick_get_state() {
+        return joystick_state_buttons | joystick_state_hat;
+}
 
 void
 mouse_event(SDL_Event * pev) {
@@ -133,6 +167,13 @@ tty_recv()
 	    case SDL_MOUSEBUTTONUP:
 	    case SDL_MOUSEMOTION:
 		    mouse_event(&ev);
+		    break;
+            case SDL_JOYBUTTONDOWN:
+            case SDL_JOYBUTTONUP:
+            case SDL_JOYHATMOTION:
+            case SDL_JOYAXISMOTION:
+            case SDL_JOYBALLMOTION:
+		    joystick_event(&ev);
 		    break;
 	    case SDL_VIDEORESIZE:
 		    scr_switch(ev.resize.w, ev.resize.h);

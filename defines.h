@@ -470,6 +470,11 @@ extern const _itab_t itab[];
 				else \
 					SET_CC_V()
 
+int joystick_read(c_addr addr, d_word *word);
+void joystick_init(void);
+int joystick_write(c_addr addr, d_word word);
+int joystick_bwrite(c_addr addr, d_byte byte);
+
 typedef enum {
        nopD, rtcD, stepinD, stepoutD, readtsD, readD, writeD, delD
 } disk_cmd;
@@ -501,5 +506,22 @@ extern unsigned char req_page[512], req_palette[512];
 extern int cybuf[1024];
 extern int cybufidx;
 void intr_hand(void);
+d_word platform_joystick_get_state();
+void platform_joystick_init();
+
+enum joystick_state {
+  JOYSTICK_BUTTON1 = 0x1,
+  JOYSTICK_BUTTON2 = 0x2,
+  JOYSTICK_BUTTON3 = 0x4,
+  JOYSTICK_BUTTON4 = 0x8,
+  JOYSTICK_RIGHT = 0x10,
+  JOYSTICK_DOWN = 0x20,
+  JOYSTICK_LEFT = 0x200,
+  JOYSTICK_UP = 0x400
+};
+
+static inline enum joystick_state JOYSTICK_BUTTON(int idx) {
+  return 1 << idx;
+}
 
 #endif
