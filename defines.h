@@ -69,6 +69,7 @@ void plug_mouse(void);
 void plug_covox(void);
 void plug_synth(void);
 void plug_bkplip(void);
+void tty_keyevent(int c);
 void fake_disk_io(void);
 void fake_sector_io(void);
 c_addr disas (c_addr a, char * dest);
@@ -101,9 +102,12 @@ typedef struct _pdp_regs {
 	unsigned look_time;	/* when to handle things, saves time */
 } pdp_regs;
 
-
 extern unsigned int hasexit;
 
+void timing(register pdp_regs *p);
+int lc_word(c_addr addr, d_word *word);
+int sc_word(c_addr addr, d_word word);
+int load_src(register pdp_regs *p, d_word *data);
 /*
  * Definitions for the memory map and memory operations.
  */
@@ -497,14 +501,56 @@ typedef struct {
 } disk_t;
 
 extern unsigned long pending_interrupts;
+
+void disk_open(disk_t * pdt, const char * name);
+void ev_register(unsigned priority, int (*handler)(d_word),
+		 unsigned long delay,	/* in clock ticks */
+		 d_word info);
 void ev_fire( int priority );
+char * state(pdp_regs * p);
+void pagereg_bwrite(d_byte byte);
+void serial_write(d_word w);
+void tape_write(unsigned status, unsigned val);
+int storeb_dst(register pdp_regs *p, d_byte data);
+void pagereg_write(d_word word);
+void sound_init(void);
+int load_dst(register pdp_regs *p, d_word *data);
+void tape_write(unsigned status, unsigned val);
+int tape_read(void);
+void tape_init(void);
+d_word serial_read(void);
+void scr_param_change(int pal, int buf);
+int store_dst_2( register pdp_regs *p, d_word data);
+int load_dst(register pdp_regs *p, d_word *data);
+int store_dst(register pdp_regs *p, d_word data);
+int loadb_dst(register pdp_regs *p, d_byte *data);
+int brx(register pdp_regs *p, unsigned clear, unsigned set);
+int pop(register pdp_regs *p, d_word *data);
+int storeb_dst_2(register pdp_regs *p, d_byte data);
+void q_reset(void);
+int sl_byte(register pdp_regs *p, d_word laddr, d_byte byte);
+int push(register pdp_regs *p, d_word data);
+void addtocybuf(int val);
+void mem_init(void);
 void sim_init(void);
+void tty_open(void);
+void ev_init(void);
+void scr_flush(void);
+void maybe_scr_flush(void);
+int run_cpu_until(register pdp_regs *p, long long max_ticks);
+void load_and_run(FILE *f);
+int ll_byte( register pdp_regs *p, d_word baddr, d_byte *byte );
+int loadb_src( register pdp_regs *p, d_byte *data);
+int load_ea( register pdp_regs *p, d_word *addr);
+void scr_sync(void);
 extern int breakpoint;
 extern unsigned char change_req;
 extern unsigned char param_change_line;
+void scr_common_init(void);
 extern unsigned char req_page[512], req_palette[512];
 extern int cybuf[1024];
 extern int cybufidx;
+void ui_download(void);
 void intr_hand(void);
 d_word platform_joystick_get_state();
 void platform_joystick_init();
