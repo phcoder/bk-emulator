@@ -513,3 +513,13 @@ void q_reset()
 	}
 }
 
+unsigned short *
+get_vram_line (int bufno, int line) {
+  int i;
+  for (i = 0; i < 4; i++)
+    if (video_map[i] == bufno + 1)
+      break;
+  if (i == 4)
+    i = 1;
+  return &pagemap[i][line << 5];
+}
