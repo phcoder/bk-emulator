@@ -572,4 +572,6 @@ void platform_disk_init(disk_t *disks);
 
 extern char * tape_prefix;
 
+void load_and_run_bin(void *data, size_t sz);
+
 #endif

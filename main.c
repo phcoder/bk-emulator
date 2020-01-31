@@ -332,11 +332,41 @@ int load_file(FILE *f, int addr) {
 	return addr0;
 }
 
-void load_and_run(FILE *f) {
-	int addr0 = load_file(f, -1);
-	if (addr0 < 01000) {
+static void run_game(int addr0) {
+        if (addr0 < 01000) {
 		lc_word(00776, &pdp.regs[PC]);
 	} else
 		pdp.regs[PC] = 01000;
 	sc_word(0320, 3);
+}
+
+void load_and_run(FILE *f) {
+	run_game(load_file(f, -1));
+}
+
+
+static int load_bin(unsigned char *data, size_t sz) {
+  	int ptr;
+
+        if (sz < 4)
+                return -1;
+
+        int addr = data[1] << 8 | data[0];
+	int len = data[3] << 8 | data[2];
+        if (len > sz - 4 || len < 0)
+                len = sz - 4;
+	fprintf(stderr, _("Reading file into %06o... "), addr);
+	/* the file is in little-endian format */
+	for (ptr = 0; ptr < len; ptr += 2) {
+		if (OK != sc_word(addr + ptr,
+                                  data[5+ptr] << 8 | data[4+ptr])) {
+		    break;
+		}
+	}
+	fprintf(stderr, _("Done.\nLast filled address is %06o\n"), addr + ptr - 2);
+	return addr;
+}
+
+void load_and_run_bin(void *data, size_t sz) {
+        run_game(load_bin(data, sz));
 }
