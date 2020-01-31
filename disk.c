@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 /* let's operate on 819200 byte images first */
 #define SECSIZE 512
@@ -14,99 +13,18 @@
 #define O_BINARY 0
 #endif
 
-/* Why bother, let's memory-map the files! */
-typedef struct {
-	unsigned int length;
-	unsigned short * image;
-	unsigned short * ptr;
-	unsigned char track;
-	unsigned char side;
-	unsigned char ro;
-	unsigned char motor;
-	unsigned char inprogress;
-	unsigned char crc;
-	unsigned char need_sidetrk;
-	unsigned char need_sectsize;
-	unsigned char cursec;
-} disk_t;
-
-disk_t disks[4];
+static disk_t disks[4];
 static int selected = -1;
 
 void do_disk_io(int drive, int blkno, int nwords, int ioaddr);
 
-/* Pretty much had to rewrite it for portability rofl. - Gameblabla 
- * This does not seem to handle writes to the file.
- * */
-void disk_open(disk_t * pdt, char * name) 
-{
-	FILE* fp;
-	int result;
-	
-	/* First, we check if the file exists. */
-	fp = fopen(name, "rb");
-	if (!fp)
-	{
-		/* It doesn't so let's exit right away. */
-		perror(name);
-		return;
-	}
-	else
-		fclose(fp);
-	
-	fp = fopen(name, "r+b");
-	if (!fp)
-	{
-		/* Open file as Read-only */
-		fp = fopen(name, "rb");
-		if (!fp)
-		{
-			perror(name);
-			return;
-		}
-		pdt->ro = 1;
-	}
-	
-	/* Determine size of file*/
-	fseek(fp , 0 , SEEK_END );
-	pdt->length = ftell (fp);
-	fseek(fp , 0 , SEEK_SET );
-	
-	if (pdt->length == -1) perror("seek");
-	if (pdt->length % SECSIZE) 
-	{
-		fprintf(stderr, _("%s is not an integer number of blocks: %d bytes\n"), name, pdt->length);
-		fclose(fp);
-		return;
-	}
-	
-	pdt->image = malloc(pdt->length);
-	if (pdt->image == NULL)
-	{
-		fprintf(stderr, _("Unable to malloc. Out of memory ?\n"));
-		fclose(fp);
-		perror(name);
-	}
-	
-	result = fread (pdt->image, sizeof(unsigned char), pdt->length, fp);
-	if (fp) fclose(fp);
-	
-	if (pdt->ro) 
-	{
-		fprintf(stderr, _("%s will be read only\n"), name);
-	}
-}
-
 /* Are there any interrupts to open or close ? */
 
-int disk_init() {
+void disk_init() {
 	static char init_done = 0;
 	int i;
 	if (!init_done) {
-		disk_open(&disks[0], floppyA);	
-		disk_open(&disks[1], floppyB);	
-		disk_open(&disks[2], floppyC);	
-		disk_open(&disks[3], floppyD);	
+                platform_disk_init(disks);
 		init_done = 1;
 	}
 	for (i = 0; i < 4; i++) {
@@ -115,7 +33,6 @@ int disk_init() {
 		disks[i].motor = disks[i].inprogress = 0;
 	}
 	selected = -1;
-	return OK;
 }
 
 void disk_finish() {
@@ -134,7 +51,6 @@ void disk_finish() {
 /* The index hole appears for 1 ms every 100 ms,
  */
 int index_flag() {
-	extern double ticks;
 	unsigned msec = ticks / (TICK_RATE/1000);
 	return (msec % 100 == 0);
 }
@@ -145,7 +61,7 @@ int index_flag() {
 #define DATAFLAG 0120773
 #define ENDFLAG 0120770
 
-unsigned short index_marker[] = {
+static const unsigned short index_marker[] = {
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,  
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, 
 0, 0, 0, 0, 0, 0, LAST, IDXFLAG
@@ -153,13 +69,13 @@ FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 
 #define IDXMRKLEN (sizeof(index_marker)/sizeof(*index_marker))
 
-unsigned short data_marker[] = {
+static const unsigned short data_marker[] = {
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 FILLER, FILLER, FILLER, 0, 0, 0, 0, 0, 0, LAST, DATAFLAG
 };
 #define DATAMRKLEN (sizeof(data_marker)/sizeof(*data_marker))
 
-unsigned short end_marker[] = {
+static const unsigned short end_marker[] = {
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER, FILLER,
 FILLER, FILLER, 0, 0, 0, 0, 0, 0, LAST, ENDFLAG
@@ -232,7 +148,7 @@ disk_read(c_addr addr, d_word *word) {
 			pdp.regs[PC], *word);
 #endif
 		} else {
-			static dummy = 0x5555;
+			static int dummy = 0x5555;
 			fprintf(stderr, "?");
 			// fprintf(stderr, _("Reading 177132 when no I/O is progress?\n"));
 			*word = dummy = ~dummy;

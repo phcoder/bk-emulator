@@ -2,19 +2,16 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 unsigned char tape_read_val = 1, tape_write_val = 0;
 FILE * tape_read_file = NULL;
 FILE * tape_write_file = NULL;
+char * tape_prefix = NULL;
 unsigned char tape_status = 1; /* 0 = tape moving, 1 = tape stopped */
 
 flag_t fake_tape = 1;	/* Default */
 
-extern int tapeflag;
-double tape_read_ticks, tape_write_ticks;
-extern double ticks;
 void tape_read_start(), tape_read_finish();
 
 static enum { Idle, Addr, Len, Name, Data, Checksum } fake_state = Idle;
@@ -198,13 +195,24 @@ void fake_read_strobe() {
 	if (fake_state == Idle && !tape_read_file) {
 		/* First time here, find which file to open */
 		get_emt36_filename();
-		tape_read_file = fopen(unix_filename, "r");
+                char *alloc_fullpath = NULL;
+                const char * fullpath = unix_filename;
+                if (tape_prefix != NULL) {
+                        int al = strlen(unix_filename) + strlen(tape_prefix) + 7;
+                        alloc_fullpath = malloc (al+1);
+                        strncpy(alloc_fullpath, tape_prefix, al);
+                        strncat(alloc_fullpath, unix_filename, al);
+                        fullpath = alloc_fullpath;
+                }
+                tape_read_file = fopen(fullpath, "r");
 		fprintf(stderr, _("Will read unix file <%s> under BK name <%s>\n"),
-			unix_filename, bk_filename);
+			fullpath, bk_filename);
 		fake_state = Addr;
 		bitnum = 0;
 		checksum = 0;
 		curlen = curaddr = 0;
+                if (alloc_fullpath != NULL)
+                        free (alloc_fullpath);
 	}
 	switch (fake_state) {
 	case Idle:
@@ -285,7 +293,7 @@ void fake_read_strobe() {
 
 void
 fake_write_file() {
-	c_addr base;
+	d_word base;
 	lc_word(0306, &base);
 	get_emt36_filename();
 	tape_write_file = fopen(unix_filename, "w");

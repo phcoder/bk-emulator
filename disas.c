@@ -16,8 +16,7 @@
 
 #include "defines.h"
 #include <ctype.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 /* Instructions can be prefixed by an uppercase letter:
  * B - branch (signed jump offset)
@@ -32,12 +31,12 @@
  * otherwise it has no operands.
  * Digits mean "look deeper".
  */
-char* base[16] = {
+static const char *const base[16] = {
 "0", "Gmov", "Gcmp", "Gbit", "Gbic", "Gbis", "Gadd", "7",
 "8", "Gmovb", "Gcmpb", "Gbitb", "Gbicb", "Gbisb", "Gsub", "N"
 };
 
-char* decode0[64] = {
+static const char* const decode0[64] = {
 /*000*/ "0", "Ojmp", "2", "Oswab", "Bbr", "Bbr", "Bbr", "Bbr",
 /*001*/ "Bbne", "Bbne", "Bbne", "Bbne", "Bbeq", "Bbeq", "Bbeq", "Bbeq",
 /*002*/ "Bbge", "Bbge", "Bbge", "Bbge", "Bblt", "Bblt", "Bblt", "Bblt",
@@ -48,7 +47,7 @@ char* decode0[64] = {
 /*007*/ "N", "N", "N", "N", "N", "N", "N", "N"
 };
 
-char* decode000[64] = {
+static const char *const decode000[64] = {
 	"halt", "wait", "rti", "bpt", "iot", "reset", "rtt", "N",
 	"N", "N", "N", "N", "N", "N", "N", "N",
 	"N", "N", "N", "N", "N", "N", "N", "N",
@@ -60,7 +59,7 @@ char* decode000[64] = {
 };
 
 /* Here the instruction is completely decoded, we can print it as is */
-char * decode002[64] = {
+static const char *const decode002[64] = {
 	"rts r0", "rts r1", "rts r2", "rts r3", "rts r4", "rts r5", "rts sp", "rts pc",
 	"N", "N", "N", "N", "N", "N", "N", "N",
 	"N", "N", "N", "N", "N", "N", "N", "N",
@@ -71,7 +70,7 @@ char * decode002[64] = {
 	"sen", "senc", "senv", "senvc", "senz", "senzc", "senzv", "scc"
 };
 
-char * decode7[64] = {
+static const char *const decode7[64] = {
 /*070*/ "Rmul",
 /*071*/ "Rdiv",
 /*072*/ "Rash",
@@ -82,16 +81,16 @@ char * decode7[64] = {
 /*077*/ "Ssob",
 };
 
-char * decode750[4] = {
+static const char *const decode750[4] = {
 /*07500*/ "Ffadd",
 /*07501*/ "Ffsub",
 /*07502*/ "Ffmul",
 /*07503*/ "Ffdiv",
 };
 
-char * regnam[8] = {"r0", "r1", "r2", "r3", "r4", "r5", "sp", "pc" };
+static const char *const regnam[8] = {"r0", "r1", "r2", "r3", "r4", "r5", "sp", "pc" };
 
-char * decode8[64] = {
+static const char *const decode8[64] = {
 /*100*/ "Bbpl", "Bbpl", "Bbpl", "Bbpl", "Bbmi", "Bbmi", "Bbmi", "Bbmi",
 /*101*/ "Bbhi", "Bbhi", "Bbhi", "Bbhi", "Bblos", "Bblos", "Bblos", "Bblos",
 /*102*/ "Bbvc", "Bbvc", "Bbvc", "Bbvc", "Bbvs", "Bbvs", "Bbvs", "Bbvs",
@@ -113,7 +112,7 @@ void printop(unsigned rm, c_addr * a, char **destp) {
 	unsigned mode = rm >> 3;
 	switch (mode) {
 	case 0:
-		sprintf(*destp, regnam[r]);
+	  sprintf(*destp, "%s", regnam[r]);
 		break;
 	case 1:
 		sprintf(*destp, "(%s)", regnam[r]);
@@ -159,7 +158,7 @@ c_addr disas (c_addr a, char * dest) {
 	lc_word(a, &inst);
 	a += 2;
 	a &= 0177777;
-	char * code = base[inst >> 12];
+	const char * code = base[inst >> 12];
 	char soffset;
 	unsigned char uoffset;
 	switch (*code) {

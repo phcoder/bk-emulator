@@ -63,6 +63,27 @@ typedef unsigned short d_word;	/* data word (16 bit) */
 typedef unsigned char d_byte;	/* data byte (8 bit) */
 typedef unsigned char flag_t;	/* for boolean or small value flags */
 
+void plug_joystick(void);
+void plug_printer(void);
+void plug_mouse(void);
+void plug_covox(void);
+void plug_synth(void);
+void plug_bkplip(void);
+void tty_keyevent(int c);
+void fake_disk_io(void);
+void fake_sector_io(void);
+c_addr disas (c_addr a, char * dest);
+void fake_tuneup_sequence(void);
+void fake_array_with_tuneup(void);
+void fake_read_strobe(void);
+void fake_write_file(void);
+void sound_discard(void);
+void sound_semwait(void);
+void platform_sound_init(void);
+void sound_write_sample(short val);
+void sound_flush(void);
+void platform_sound_flush(void);
+
 /*
  * PDP processor defines.
  */
@@ -81,9 +102,12 @@ typedef struct _pdp_regs {
 	unsigned look_time;	/* when to handle things, saves time */
 } pdp_regs;
 
-
 extern unsigned int hasexit;
 
+void timing(register pdp_regs *p);
+int lc_word(c_addr addr, d_word *word);
+int sc_word(c_addr addr, d_word word);
+int load_src(register pdp_regs *p, d_word *data);
 /*
  * Definitions for the memory map and memory operations.
  */
@@ -132,25 +156,43 @@ extern unsigned int hasexit;
 #define PDP_READABLE_MEM_SIZE   (63 * 512)  /* 0 - 175777 */
 #define PDP_FULL_MEM_SIZE       (64 * 512)  /* 0 - 177777 */
 
-extern d_word rom[4][8192], ram[8][8192], system_rom[8192];
-extern int boot_init(), boot_read(), boot_write(c_addr, d_word), boot_bwrite(c_addr, d_byte);
-extern int scr_init(), scr_write(int, c_addr, d_word), scr_switch(int, int);
-extern int tty_init(), tty_read(), tty_write(c_addr, d_word), tty_bwrite(c_addr, d_byte);
-extern int io_init(), io_read(), io_write(c_addr, d_word), io_bwrite(c_addr, d_byte);
-extern int disk_init(), disk_read(), disk_write(c_addr, d_word), disk_bwrite(c_addr, d_byte);
-extern int tdisk_init(), tdisk_read(), tdisk_write(c_addr, d_word), tdisk_bwrite(c_addr, d_byte);
-extern void disk_finish();
-extern void tdisk_finish();
-extern void io_read_start();
-extern int timer_init(), timer_read(), timer_write(c_addr, d_word), timer_bwrite(c_addr, d_byte);
-extern int line_init(), line_read(), line_write(c_addr, d_word), line_bwrite(c_addr, d_byte);
-extern int printer_init(), printer_read(), printer_write(c_addr, d_word), printer_bwrite(c_addr, d_byte);
-extern int mouse_init(), mouse_read(), mouse_write(c_addr, d_word), mouse_bwrite(c_addr, d_byte);
-extern int covox_init(), covox_read(), covox_write(c_addr, d_word), covox_bwrite(c_addr, d_byte);
-extern int synth_init(), synth_read(), synth_write(c_addr, d_word), synth_bwrite(c_addr, d_byte), synth_next(void);
-extern int bkplip_init(), bkplip_read(), bkplip_write(c_addr, d_word), bkplip_bwrite(c_addr, d_byte);
+extern void line_init(void);
+void bk_scr_init(void);
+void boot_init(void);
+void timer_init(void);
+void printer_init(void);
+void covox_init(void);
+void synth_init(void);
+void mouse_init(void);
+void tty_init(void);
+void bkplip_init(void);
+void io_init(void);
+void disk_init(void);
+void tdisk_init(void);
+extern int boot_read(void), boot_write(c_addr, d_word), boot_bwrite(c_addr, d_byte);
+extern int scr_write(int, c_addr, d_word), scr_switch(int, int);
+extern int tty_read(c_addr addr, d_word *word);
+extern int tty_write(c_addr, d_word), tty_bwrite(c_addr, d_byte);
+extern int io_read(c_addr addr, d_word *word), io_write(c_addr, d_word), io_bwrite(c_addr, d_byte);
+extern int disk_read(c_addr addr, d_word *word), disk_write(c_addr, d_word), disk_bwrite(c_addr, d_byte);
+extern int tdisk_read(c_addr addr, d_word *word), tdisk_write(c_addr, d_word), tdisk_bwrite(c_addr, d_byte);
+extern void disk_finish(void);
+extern void tdisk_finish(void);
+extern void io_read_start(void);
+extern int timer_read(c_addr addr, d_word *word);
+extern int timer_write(c_addr, d_word), timer_bwrite(c_addr, d_byte);
+extern int line_read(c_addr addr, d_word *word), line_write(c_addr, d_word), line_bwrite(c_addr, d_byte);
+extern int printer_read(c_addr addr, d_word *word), printer_write(c_addr, d_word), printer_bwrite(c_addr, d_byte);
+extern int mouse_read(c_addr addr, d_word *word), mouse_write(c_addr, d_word), mouse_bwrite(c_addr, d_byte);
+extern int covox_read(c_addr addr, d_word *word);
+extern int covox_write(c_addr, d_word), covox_bwrite(c_addr, d_byte);
+extern int synth_read(c_addr addr, d_word *word), synth_write(c_addr, d_word), synth_bwrite(c_addr, d_byte), synth_next(void);
+extern int bkplip_read(c_addr addr, d_word *word), bkplip_write(c_addr, d_word), bkplip_bwrite(c_addr, d_byte);
 extern int service(d_word);
-
+unsigned short *get_vram_line (int bufno, int line);
+void tape_read_start(void);
+void tape_read_finish(void);
+     
 /*
  * Defines for the event handling system.
  */
@@ -162,7 +204,7 @@ extern int service(d_word);
 #define TTY_PRI		1
 
 typedef struct _event {
-	int (*handler)();		/* handler function */
+	int (*handler)(d_word);		/* handler function */
 	d_word info;			/* info or vector number */
 	double when;			/* when to fire this event */
 } event;
@@ -172,38 +214,138 @@ typedef struct _event {
  * Instruction Table for Fast Decode.
  */
 
-struct _itab {
-	int (*func)();
-};
+typedef int (*_itab_t)();
 
 
 /*
  * Global variables.
  */
 
-extern struct timeval real_time;
-extern int ui_done;
-extern unsigned short last_branch;
-extern pdp_regs pdp;
-extern event *event_list[NUM_PRI];
-extern char * printer_file;
-extern char * romdir;
-extern char * rompath10, *rompath12, *rompath16;
-extern char * bos11rom, * diskrom, * bos11extrom, * basic11arom, * basic11brom;
-extern int TICK_RATE;
+struct bk_state {
+	int ui_done;
+	unsigned short _last_branch;
+	pdp_regs _pdp; /* internal processor registers */
+	int _TICK_RATE;
 
-extern char * floppyA, *floppyB, *floppyC, *floppyD;
-extern struct _itab itab[];
-extern unsigned short tty_scroll;
+	unsigned short _tty_scroll;
+	flag_t _key_pressed;
+	flag_t _fake_disk;
+	/* 1 if interrupt requested while WAIT was in effect */
+	flag_t _in_wait_instr;
+	unsigned io_sound_val;
+	flag_t _io_stop_happened;
+	int    io_tape_mode, io_tape_val, io_tape_bit;
+	flag_t _nflag;		/* audio flag */
+	flag_t _mouseflag;	/* mouse flag */
+	flag_t _fullspeed;	/* do not slow down to real BK speed */
+	flag_t _tapeflag;	/* Disable reading from tape */
+	double _frame_delay;	/* Delay in ticks between video frames */
+        double _half_frame_delay;
+
+	flag_t _cflag, _bkmodel, _terak;
+	long long _ticks_timer;
+	long long _ticks, io_tape_ticks;     /* in main clock freq, integral */
+	long long _tape_read_ticks, _tape_write_ticks;
+	flag_t _timer_intr_enabled;
+	volatile int _stop_it;	/* set when a SIGINT happens during execution */
+
+	/* 
+	 * BK-0011 has 8 8Kw RAM pages and 4 8 Kw ROM pages.
+	 * RAM pages 1 and 7 are video RAM.
+	 */
+	d_word _ram[8][8192];
+	d_word _rom[4][8192];
+	d_word _system_rom[8192];
+	unsigned char _umr[65536];
+
+	/*
+	 * Each bit corresponds to a Kword,
+	 * the lowest 8 Kwords are RAM, the next 8 are screen memory,
+	 * the rest is usually ROM.
+	 */
+	unsigned long _pdp_ram_map;
+	unsigned long _pdp_mem_map;
+
+	d_word _timer_count, _timer_setup, _timer_control;
+	long long _ticks_start;
+	unsigned int _timer_period;
+
+	long long _framectr;
+	long long _soundctr;
+
+	unsigned _scan_line_duration;
+
+	unsigned char _covox_val;
+	unsigned int _covox_age;
+	unsigned _io_sound_val;
+
+	unsigned _io_max_sound_age;
+	unsigned _io_sound_age;	/* in io_sound_pace's since last change */
+	double _io_sound_pace;
+	double _io_sound_count;
+};
+
+extern const char *printer_file;
+
+extern const char *rompath10, *rompath12, *rompath16;
+extern const char *const bos11rom, *const diskrom, *const bos11extrom;
+extern const char *const basic11arom, *const basic11brom;
+
+extern struct bk_state current_state;
+extern 	flag_t traceflag;	/* print all instruction addresses */
+extern 	FILE * tracefile;	/* trace goes here */
+extern char * romdir;
+
 extern unsigned scr_dirty;
-extern flag_t key_pressed;
-extern flag_t in_wait_instr;
-extern unsigned io_sound_val;
-extern flag_t io_stop_happened;
-extern int      io_tape_mode, io_tape_val, io_tape_bit;
-extern flag_t cflag, mouseflag, bkmodel, terak, nflag, fullspeed;
-extern double ticks, io_tape_ticks;     /* in main clock freq, integral */
-extern flag_t timer_intr_enabled;
+
+extern const _itab_t itab[];
+
+#define bkmodel current_state._bkmodel
+#define stop_it current_state._stop_it
+#define nflag current_state._nflag
+#define io_stop_happened current_state._io_stop_happened
+#define ticks current_state._ticks
+#define in_wait_instr current_state._in_wait_instr
+#define pdp current_state._pdp
+#define timer_intr_enabled current_state._timer_intr_enabled
+#define last_branch current_state._last_branch
+#define ticks_timer current_state._ticks_timer
+#define terak current_state._terak
+#define TICK_RATE current_state._TICK_RATE
+#define mouseflag current_state._mouseflag
+#define fullspeed current_state._fullspeed
+#define key_pressed current_state._key_pressed
+#define fake_disk current_state._fake_disk
+#define tapeflag current_state._tapeflag
+#define frame_delay current_state._frame_delay
+#define half_frame_delay current_state._half_frame_delay
+#define cflag current_state._cflag
+#define tty_scroll current_state._tty_scroll
+#define ram current_state._ram
+#define rom current_state._rom
+#define system_rom current_state._system_rom
+#define umr current_state._umr
+#define pdp_ram_map current_state._pdp_ram_map
+#define pdp_mem_map current_state._pdp_mem_map
+
+#define timer_count current_state._timer_count
+#define timer_setup current_state._timer_setup
+#define timer_control current_state._timer_control
+#define ticks_start current_state._ticks_start
+#define timer_period current_state._timer_period
+#define framectr current_state._framectr
+#define soundctr current_state._soundctr
+#define scan_line_duration current_state._scan_line_duration
+
+#define covox_val current_state._covox_val
+#define covox_age current_state._covox_age
+#define io_sound_val current_state._io_sound_val
+#define io_max_sound_age current_state._io_max_sound_age
+#define io_sound_age current_state._io_sound_age
+#define io_sound_pace current_state._io_sound_pace
+#define io_sound_count current_state._io_sound_count
+#define tape_read_ticks current_state._tape_read_ticks
+#define tape_write_ticks current_state._tape_write_ticks
 
 /*
  * Inline defines.
@@ -330,5 +472,106 @@ extern flag_t timer_intr_enabled;
 					CLR_CC_V(); \
 				else \
 					SET_CC_V()
+
+int joystick_read(c_addr addr, d_word *word);
+void joystick_init(void);
+int joystick_write(c_addr addr, d_word word);
+int joystick_bwrite(c_addr addr, d_byte byte);
+
+typedef enum {
+       nopD, rtcD, stepinD, stepoutD, readtsD, readD, writeD, delD
+} disk_cmd;
+
+/* Why bother, let's memory-map the files! */
+typedef struct {
+       unsigned int length;
+       unsigned short * image;
+       const unsigned short * ptr;
+       unsigned char track;
+       unsigned char side;
+       unsigned char ro;
+       unsigned char motor;
+       unsigned char inprogress;
+       unsigned char crc;
+       unsigned char need_sidetrk;
+       unsigned char need_sectsize;
+       unsigned char cursec;
+        disk_cmd cmd;
+} disk_t;
+
+extern unsigned long pending_interrupts;
+
+void ev_register(unsigned priority, int (*handler)(d_word),
+		 unsigned long delay,	/* in clock ticks */
+		 d_word info);
+void ev_fire( int priority );
+char * state(pdp_regs * p);
+void pagereg_bwrite(d_byte byte);
+void serial_write(d_word w);
+void tape_write(unsigned status, unsigned val);
+int storeb_dst(register pdp_regs *p, d_byte data);
+void pagereg_write(d_word word);
+void sound_init(void);
+int load_dst(register pdp_regs *p, d_word *data);
+void tape_write(unsigned status, unsigned val);
+int tape_read(void);
+void tape_init(void);
+d_word serial_read(void);
+void scr_param_change(int pal, int buf);
+int store_dst_2( register pdp_regs *p, d_word data);
+int load_dst(register pdp_regs *p, d_word *data);
+int store_dst(register pdp_regs *p, d_word data);
+int loadb_dst(register pdp_regs *p, d_byte *data);
+int brx(register pdp_regs *p, unsigned clear, unsigned set);
+int pop(register pdp_regs *p, d_word *data);
+int storeb_dst_2(register pdp_regs *p, d_byte data);
+void q_reset(void);
+int sl_byte(register pdp_regs *p, d_word laddr, d_byte byte);
+int push(register pdp_regs *p, d_word data);
+void addtocybuf(int val);
+void mem_init(void);
+void sim_init(void);
+void tty_open(void);
+void ev_init(void);
+void scr_flush(void);
+void maybe_scr_flush(void);
+int run_cpu_until(register pdp_regs *p, long long max_ticks);
+void load_and_run(FILE *f);
+int ll_byte( register pdp_regs *p, d_word baddr, d_byte *byte );
+int loadb_src( register pdp_regs *p, d_byte *data);
+int load_ea( register pdp_regs *p, d_word *addr);
+void scr_sync(void);
+extern int breakpoint;
+extern unsigned char change_req;
+extern unsigned char param_change_line;
+void scr_common_init(void);
+extern unsigned char req_page[512], req_palette[512];
+extern int cybuf[1024];
+extern int cybufidx;
+void ui_download(void);
+void intr_hand(void);
+d_word platform_joystick_get_state();
+void platform_joystick_init();
+
+enum joystick_state {
+  JOYSTICK_BUTTON1 = 0x1,
+  JOYSTICK_BUTTON2 = 0x2,
+  JOYSTICK_BUTTON3 = 0x4,
+  JOYSTICK_BUTTON4 = 0x8,
+  JOYSTICK_RIGHT = 0x10,
+  JOYSTICK_DOWN = 0x20,
+  JOYSTICK_LEFT = 0x200,
+  JOYSTICK_UP = 0x400
+};
+
+static inline enum joystick_state JOYSTICK_BUTTON(int idx) {
+  return 1 << idx;
+}
+
+void platform_disk_init(disk_t *disks);
+
+extern char * tape_prefix;
+
+void load_and_run_bin(void *data, size_t sz);
 
 #endif

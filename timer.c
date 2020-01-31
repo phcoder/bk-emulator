@@ -1,8 +1,5 @@
 #include "defines.h"
 
-d_word timer_count, timer_setup, timer_control;
-double ticks_start;
-unsigned int timer_period;
 #define TIM_UNKNOWN1    1
 #define TIM_CONTINUOUS  2
 #define TIM_ENBEND      4
@@ -11,15 +8,17 @@ unsigned int timer_period;
 #define TIM_DIV16      32
 #define TIM_DIV4       64
 #define TIM_END       128
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 /* Period is such that the cycle duration of the timer counter
  * with both dividers on is almost exactly 3 min (178.95 sec).
  */
 #define PERIOD	128 
 
-timer_read(addr, word)
+static void timer_check();
+static void timer_setmode(d_byte mode);
+
+int timer_read(addr, word)
 c_addr addr;
 d_word *word;
 {
@@ -39,7 +38,7 @@ d_word *word;
 	return OK;
 }
 
-timer_write(addr, word)
+int timer_write(addr, word)
 c_addr addr;
 d_word word;
 {
@@ -63,7 +62,7 @@ d_word word;
 	return OK;
 }
 
-timer_bwrite(addr, byte)
+int timer_bwrite(addr, byte)
 c_addr addr;
 d_byte byte;
 {
@@ -90,7 +89,7 @@ d_byte byte;
 	return OK;
 }
 
-timer_check() {
+static void timer_check() {
 	unsigned long delta;
 	if (!(timer_control & TIM_START))
 		return;
@@ -119,8 +118,7 @@ timer_check() {
 	}
 }
 
-timer_setmode(mode)
-d_byte mode;
+static void timer_setmode(d_byte mode)
 {
 	if (mode & TIM_UNKNOWN1) {
 		fprintf(stderr, _("Setting unknown timer mode bits\n"));
@@ -139,7 +137,7 @@ d_byte mode;
 	timer_control = mode;
 }
 
-timer_init() {
+void timer_init() {
 	timer_control = 0177400;
 	timer_count = 0177777;
 	timer_setup = 0011000;

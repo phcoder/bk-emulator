@@ -42,7 +42,6 @@
 
 int ui_done;
 int breakpoint = -1;
-extern int traceflag;
 static char buf[BUFSIZ];
 
 void ui_load(const char *s);
@@ -343,7 +342,6 @@ ui_start( s, n )
 char *s;
 int n;
 {
-	extern disas(c_addr pc, char * dest);
 	static char buf[80];
 	d_word word;
 	int good;
@@ -424,36 +422,7 @@ void ui_load(const char *s)
 		perror(s);
 		return;
 	}
-	c1 = fgetc(f);
-	c2 = fgetc(f);
-	if (-1 == addr)
-	    addr = c2 << 8 | c1;
-	c1 = fgetc(f);
-	c2 = fgetc(f);
-	len = c2 << 8 | c1;
-	fprintf(stderr, _("Reading %s into %06o... "), s, addr);
-	if (addr < 01000) {
-	    fprintf(stderr, _("Possible start addresses:  "));
-	    do {
-		    c1 = fgetc(f);
-		    c2 = fgetc(f);
-		    fprintf(stderr, "%06o ", c2 << 8 | c1);
-		    addr += 2;
-		    len -= 2;
-	    } while (len > 0 && addr < 01000 && !feof(f));
-
-	}
-	/* the file is in little-endian format */
-	while (len > 0 && !feof(f)) {
-		c1 = fgetc(f);
-		c2 = fgetc(f);
-		if (OK != sc_word(addr, c2 << 8 | c1)) {
-		    break;
-		}
-		addr += 2;
-		len -= 2;
-	}
-	fprintf(stderr, _("Done.\nLast filled address is %06o\n"), addr - 2);
+	load_file(f, addr);
 	scr_dirty = 1;
 	scr_flush();
 }
@@ -467,7 +436,6 @@ void ui_load(const char *s)
 ui_asm( s )
 char *s;
 {
-	extern disas(c_addr pc, char * dest);
 	static char buf[80];
 	c_addr addr;
 	c_addr new;
@@ -513,8 +481,6 @@ ui_viewbuf ( char * s )
 	d_word word;
 	int good;
 	char buf[80];
-	extern int cybuf[1024];
-	extern int cybufidx;
 	s = rd_d_word( s, &word, &good );
 	if (good == FALSE ) {
 		fprintf(stderr, _("Bad address\n"));
@@ -535,4 +501,15 @@ ui_viewbuf ( char * s )
 			printf("Vector %o\n", -a);
 		}
 	}
+}
+
+void
+ui_download() {
+	char buf[1024];
+	fputs(_("NAME? "), stderr);
+	fgets(buf, 1024, stdin);
+	if (buf[strlen(buf)-1] == '\n') {
+		buf[strlen(buf)-1] = '\0';
+	}
+	ui_load(buf);
 }

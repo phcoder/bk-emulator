@@ -1,16 +1,13 @@
 #include "defines.h"
-#include <libintl.h>
-#define _(String) gettext (String)
-
-double ticks = 0;    /* in clock ticks, integral */
+#include "intl.h"
 
 #define REGREG 12
 
-static a_time[8]  = {0, 12, 12, 20, 12, 20, 20, 28};
-static b_time[8]  = {0, 20, 20, 32, 20, 32, 32, 40};
-static ab_time[8] = {0, 16, 16, 24, 16, 24, 24, 32};
-static a2_time[8] = {0, 20, 20, 28, 20, 28, 28, 36};
-static ds_time[8] = {0, 32, 32, 40, 32, 40, 40, 48};
+static const int a_time[8]  = {0, 12, 12, 20, 12, 20, 20, 28};
+static const int b_time[8]  = {0, 20, 20, 32, 20, 32, 32, 40};
+static const int ab_time[8] = {0, 16, 16, 24, 16, 24, 24, 32};
+static const int a2_time[8] = {0, 20, 20, 28, 20, 28, 28, 36};
+static const int ds_time[8] = {0, 32, 32, 40, 32, 40, 40, 48};
 
 #define a1_time a_time
 #define dj_time a2_time
@@ -28,7 +25,7 @@ enum inst {
  sub, swabi, sxt, trap, tst, tstb, waiti, xor, fis, itimtab0, itimtab1
 };
 
-static enum inst sitimtab0[64] = {
+static const enum inst sitimtab0[64] = {
 	halt, waiti, rti, bpt, iot, busreset, rtt, illegal,
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal,
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal,
@@ -39,7 +36,7 @@ static enum inst sitimtab0[64] = {
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal
 };
 
-static enum inst sitimtab1[64] = {
+static const enum inst sitimtab1[64] = {
 	rts, rts, rts, rts, rts, rts, rts, rts,
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal,
 	illegal, illegal, illegal, illegal, illegal, illegal, illegal, illegal,
@@ -50,7 +47,7 @@ static enum inst sitimtab1[64] = {
 	scc, scc, scc, scc, scc, scc, scc, scc
 };
 
-static enum inst itimtab[1024] = {
+static const enum inst itimtab[1024] = {
 	itimtab0, jmp, itimtab1, swabi, br, br, br, br,
 	bne, bne, bne, bne, beq, beq, beq, beq,
 	bge, bge, bge, bge, blt, blt, blt, blt,
@@ -181,8 +178,7 @@ static enum inst itimtab[1024] = {
 	fis, fis, fis, fis, fis, fis, fis, fis
 };
 
-timing(p)
-register pdp_regs *p;
+void timing(register pdp_regs *p)
 {
     int byteop = (p->ir & SIGN) && ((p->ir >> 12) != 016);
     enum {defop, binop, unop, cmpop, tstop } optype = defop;

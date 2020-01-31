@@ -2,24 +2,21 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 FILE * io_printer_file = NULL;
 #define STROBE 0400
 
-printer_init() {
+void printer_init() {
 	if (NULL == io_printer_file && printer_file) {
 	    io_printer_file = fopen(printer_file, "w");
 	    if (NULL == io_printer_file) {
 		perror(printer_file);
 	    }
 	}
-
-	return OK;
 }
 
-printer_read(addr, word)
+int printer_read(addr, word)
 c_addr addr;
 d_word *word;
 {
@@ -32,7 +29,7 @@ d_word *word;
 	return OK;
 }
 
-printer_write(addr, word)
+int printer_write(addr, word)
 c_addr addr;
 d_word word;
 {
@@ -46,7 +43,7 @@ d_word word;
 	return OK;
 }
 
-printer_bwrite(c_addr addr, d_byte byte) {
+int printer_bwrite(c_addr addr, d_byte byte) {
 	d_word offset = addr & 1;
 	d_word word;
 	printer_read(addr & ~1, &word);

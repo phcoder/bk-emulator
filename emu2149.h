@@ -18,7 +18,7 @@ extern "C" {
 typedef struct {
 
 	/* Volume Table */
-	e_uint32 *voltbl ;
+	const e_uint32 *voltbl ;
 
 	e_uint8 reg[0x20] ;
 	e_int32 out ;

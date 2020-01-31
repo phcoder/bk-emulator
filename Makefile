@@ -47,13 +47,13 @@ UTILS = maketape readtape
 #
 
 SRCS =	access.c boot.c branch.c conf.c covox.c double.c ea.c itab.c \
-	main.c service.c ui.c scr.c timer.c tape.c disk.c mouse.c printer.c \
+	main.c service.c ui.c scr-sdl.c scr.c timer.c tape.c disk.c mouse.c printer.c \
 	single.c weird.c tty.c io.c timing.c sound.c disas.c serial.c bkplip.c \
-	terakdisk.c synth.c emu2149.c
+	terakdisk.c synth.c emu2149.c standalone.c sdlsound.c sdltty.c  joystick.c
 OBJS =	access.o boot.o branch.o conf.o covox.o double.o ea.o itab.o icon.o \
-	main.o service.o ui.o scr.o timer.o tape.o disk.o mouse.o printer.o \
+	main.o service.o ui.o scr-sdl.o scr.o timer.o tape.o disk.o mouse.o printer.o \
 	single.o weird.o tty.o io.o timing.o sound.o disas.o serial.o bkplip.o \
-	terakdisk.o synth.o emu2149.o
+	terakdisk.o synth.o emu2149.o standalone.o sdlsound.o sdltty.o  joystick.o
 INCS =	defines.h scr.h conf.h emu2149.h emutypes.h
 USRCS = readtape.c maketape.c pngtorgba.c
 TEXTS =	README.html configure.in icon.c

@@ -29,7 +29,7 @@
 
 
 #include "defines.h"
-
+#include "ops.h"
 
 int busreset( p )
 register pdp_regs *p;
@@ -44,7 +44,6 @@ register pdp_regs *p;
 int waiti( p )
 register pdp_regs *p;
 {
-	extern unsigned long pending_interrupts;
 	if (pending_interrupts)
 		return OK;
 	p->regs[PC] -= 2;	/* repeat instruction */
@@ -82,17 +81,17 @@ register pdp_regs *p;
 
 	
 }
-int bne( p ) register pdp_regs *p; { return brx( p, CC_Z, 0 ); }
-int beq( p ) register pdp_regs *p; { return brx( p, 0, CC_Z ); }
-int bpl( p ) register pdp_regs *p; { return brx( p, CC_N, 0 ); }
-int bmi( p ) register pdp_regs *p; { return brx( p, 0, CC_N ); }
-int bhi( p ) register pdp_regs *p; { return brx( p, CC_C|CC_Z, 0 ); }
-int bvc( p ) register pdp_regs *p; { return brx( p, CC_V, 0 ); }
-int bvs( p ) register pdp_regs *p; { return brx( p, 0, CC_V ); }
-int bcc( p ) register pdp_regs *p; { return brx( p, CC_C, 0 ); }
-int bcs( p ) register pdp_regs *p; { return brx( p, 0, CC_C ); }
-int scc( p ) register pdp_regs *p; { p->psw |= (p->ir & 017 ); return OK; }
-int ccc( p ) register pdp_regs *p; { p->psw &= ~(p->ir & 017 ); return OK; }
+int bne(register pdp_regs *p) { return brx( p, CC_Z, 0 ); }
+int beq(register pdp_regs *p) { return brx( p, 0, CC_Z ); }
+int bpl(register pdp_regs *p) { return brx( p, CC_N, 0 ); }
+int bmi(register pdp_regs *p) { return brx( p, 0, CC_N ); }
+int bhi(register pdp_regs *p) { return brx( p, CC_C|CC_Z, 0 ); }
+int bvc(register pdp_regs *p) { return brx( p, CC_V, 0 ); }
+int bvs(register pdp_regs *p) { return brx( p, 0, CC_V ); }
+int bcc(register pdp_regs *p) { return brx( p, CC_C, 0 ); }
+int bcs(register pdp_regs *p) { return brx( p, 0, CC_C ); }
+int scc(register pdp_regs *p) { p->psw |= (p->ir & 017 ); return OK; }
+int ccc(register pdp_regs *p) { p->psw &= ~(p->ir & 017 ); return OK; }
 
 
 /*

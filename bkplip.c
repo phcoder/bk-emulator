@@ -2,8 +2,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <libintl.h>
-#define _(String) gettext (String)
+#include "intl.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -33,9 +32,9 @@ static unsigned lasttime;
  * to receive 16 bit; that is, from PC to BK a whole byte can
  * be sent at once.
  */
-bkplip_init() {
+void  bkplip_init() {
 #ifdef linux
-  if (fd != -1) return OK;
+  if (fd != -1) return;
 
   fd = open(DEVTAP, O_RDWR);
   if(fd == -1) {
@@ -55,19 +54,17 @@ bkplip_init() {
 
   lasttime = 0;
 #endif
-  return OK;
 }
 
 static int len_left = 0;
 static int curbyte = 0;
-static flag_t nibble = 0;
 static int txlen = 0, txbyte = 0;
 /*
  * When no data is present, returns 0.
  * If a packet is present, returns its length (a word) with bit 15 set,
  * then its contents (N bytes). Each read returns a new byte, no strobing yet.
  */
-bkplip_read(addr, word)
+int bkplip_read(addr, word)
 c_addr addr;
 d_word *word;
 {
@@ -111,7 +108,7 @@ d_word *word;
  * Expects a packet length (a word) with bit 15 set,
  * then N bytes. Each write transmits a byte, no strobing yet.
  */
-bkplip_write(addr, word)
+int bkplip_write(addr, word)
 c_addr addr;
 d_word word;
 {
@@ -142,7 +139,7 @@ d_word word;
 	return OK;
 }
 
-bkplip_bwrite(c_addr addr, d_byte byte) {
+int bkplip_bwrite(c_addr addr, d_byte byte) {
 	d_word offset = addr & 1;
 	d_word word;
 	bkplip_read(addr & ~1, &word);
