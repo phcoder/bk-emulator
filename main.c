@@ -57,11 +57,6 @@ const char *const bos11extrom = "B11M_EXT.ROM";
 const char *const basic11arom = "BAS11M_0.ROM";
 const char *const basic11brom = "BAS11M_1.ROM";
 
-const char * floppyA = "A.img";
-const char * floppyB = "B.img";
-const char * floppyC = "C.img";
-const char * floppyD = "D.img";
-
 /*
  * Command line flags and variables.
  */

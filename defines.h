@@ -286,7 +286,6 @@ struct bk_state {
 };
 
 extern const char *printer_file;
-extern const char *floppyA, *floppyB, *floppyC, *floppyD;
 
 extern const char *rompath10, *rompath12, *rompath16;
 extern const char *const bos11rom, *const diskrom, *const bos11extrom;
@@ -502,7 +501,6 @@ typedef struct {
 
 extern unsigned long pending_interrupts;
 
-void disk_open(disk_t * pdt, const char * name);
 void ev_register(unsigned priority, int (*handler)(d_word),
 		 unsigned long delay,	/* in clock ticks */
 		 d_word info);
@@ -569,5 +567,7 @@ enum joystick_state {
 static inline enum joystick_state JOYSTICK_BUTTON(int idx) {
   return 1 << idx;
 }
+
+void platform_disk_init(disk_t *disks);
 
 #endif

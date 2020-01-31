@@ -13,72 +13,10 @@
 #define O_BINARY 0
 #endif
 
-disk_t disks[4];
+static disk_t disks[4];
 static int selected = -1;
 
 void do_disk_io(int drive, int blkno, int nwords, int ioaddr);
-
-/* Pretty much had to rewrite it for portability rofl. - Gameblabla 
- * This does not seem to handle writes to the file.
- * */
-void disk_open(disk_t * pdt, const char * name) 
-{
-	FILE* fp;
-	int result;
-	
-	/* First, we check if the file exists. */
-	fp = fopen(name, "rb");
-	if (!fp)
-	{
-		/* It doesn't so let's exit right away. */
-		perror(name);
-		return;
-	}
-	else
-		fclose(fp);
-	
-	fp = fopen(name, "r+b");
-	if (!fp)
-	{
-		/* Open file as Read-only */
-		fp = fopen(name, "rb");
-		if (!fp)
-		{
-			perror(name);
-			return;
-		}
-		pdt->ro = 1;
-	}
-	
-	/* Determine size of file*/
-	fseek(fp , 0 , SEEK_END );
-	pdt->length = ftell (fp);
-	fseek(fp , 0 , SEEK_SET );
-	
-	if (pdt->length == -1) perror("seek");
-	if (pdt->length % SECSIZE) 
-	{
-		fprintf(stderr, _("%s is not an integer number of blocks: %d bytes\n"), name, pdt->length);
-		fclose(fp);
-		return;
-	}
-	
-	pdt->image = malloc(pdt->length);
-	if (pdt->image == NULL)
-	{
-		fprintf(stderr, _("Unable to malloc. Out of memory ?\n"));
-		fclose(fp);
-		perror(name);
-	}
-	
-	result = fread (pdt->image, sizeof(unsigned char), pdt->length, fp);
-	if (fp) fclose(fp);
-	
-	if (pdt->ro) 
-	{
-		fprintf(stderr, _("%s will be read only\n"), name);
-	}
-}
 
 /* Are there any interrupts to open or close ? */
 
@@ -86,10 +24,7 @@ void disk_init() {
 	static char init_done = 0;
 	int i;
 	if (!init_done) {
-		disk_open(&disks[0], floppyA);	
-		disk_open(&disks[1], floppyB);	
-		disk_open(&disks[2], floppyC);	
-		disk_open(&disks[3], floppyD);	
+                platform_disk_init(disks);
 		init_done = 1;
 	}
 	for (i = 0; i < 4; i++) {

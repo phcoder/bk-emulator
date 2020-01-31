@@ -19,34 +19,8 @@ typedef enum {
 
 typedef disk_t tdisk_t;
 
-tdisk_t tdisks[4];
+static tdisk_t tdisks[4];
 static int selected = -1;
-
-void tdisk_open(tdisk_t * pdt, char * name) {
-	int fd = open(name, O_RDWR);
-	if (fd == -1) {
-		pdt->ro = 1;
-		fd = open(name, O_RDONLY);
-	}
-	if (fd == -1) {
-		perror(name);
-		return;
-	}
-	pdt->length = lseek(fd, 0, SEEK_END);
-	if (pdt->length % SECSIZE) {
-		fprintf(stderr, _("%s is not an integer number of blocks\n"), name);
-		close(fd);
-		return;
-	}
-	pdt->image = mmap(0, pdt->length, PROT_READ | (pdt->ro ? 0 : PROT_WRITE), MAP_SHARED, fd, 0);
-	if (pdt->image == MAP_FAILED) {
-		pdt->image = 0;
-		perror(name);
-	}
-	if (pdt->ro) {
-		fprintf(stderr, _("%s will be read only\n"), name);
-	}
-}
 
 /* Are there any interrupts to open or close ? */
 
@@ -54,10 +28,7 @@ void tdisk_init() {
 	static char init_done = 0;
 	int i;
 	if (!init_done) {
-		disk_open(&tdisks[0], floppyA);	
-		disk_open(&tdisks[1], floppyB);	
-		disk_open(&tdisks[2], floppyC);	
-		disk_open(&tdisks[3], floppyD);	
+                platform_disk_init(tdisks);
 		init_done = 1;
 	}
 	for (i = 0; i < 4; i++) {

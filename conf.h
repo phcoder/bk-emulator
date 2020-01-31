@@ -13,3 +13,4 @@ extern unsigned io_sound_freq;
 extern flag_t fake_tape, telegraph_enabled, fullscreen;
 extern flag_t traceflag;
 extern FILE * tracefile;
+extern const char *floppyA, *floppyB, *floppyC, *floppyD;

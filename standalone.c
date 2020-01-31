@@ -31,6 +31,11 @@
 unsigned int refreshtime = 0;
 static int hasgame = 0;
 
+const char * floppyA = "A.img";
+const char * floppyB = "B.img";
+const char * floppyC = "C.img";
+const char * floppyD = "D.img";
+
 char init_path[BUFSIZ];
 char game_path[512];
 static const char *const focal10rom = "FOCAL10.ROM";
@@ -516,4 +521,74 @@ char *monitor11help = _("BK0011M BOS commands:\n\n\
 	fprintf(stderr, monitor11help);
     break;
     }
+}
+
+
+/* Pretty much had to rewrite it for portability rofl. - Gameblabla 
+ * This does not seem to handle writes to the file.
+ * */
+static void disk_open(disk_t * pdt, const char * name) 
+{
+	FILE* fp;
+	int result;
+	
+	/* First, we check if the file exists. */
+	fp = fopen(name, "rb");
+	if (!fp)
+	{
+		/* It doesn't so let's exit right away. */
+		perror(name);
+		return;
+	}
+	else
+		fclose(fp);
+	
+	fp = fopen(name, "r+b");
+	if (!fp)
+	{
+		/* Open file as Read-only */
+		fp = fopen(name, "rb");
+		if (!fp)
+		{
+			perror(name);
+			return;
+		}
+		pdt->ro = 1;
+	}
+	
+	/* Determine size of file*/
+	fseek(fp , 0 , SEEK_END );
+	pdt->length = ftell (fp);
+	fseek(fp , 0 , SEEK_SET );
+	
+	if (pdt->length == -1) perror("seek");
+	if (pdt->length % 64) 
+	{
+		fprintf(stderr, _("%s is not an integer number of blocks: %d bytes\n"), name, pdt->length);
+		fclose(fp);
+		return;
+	}
+	
+	pdt->image = malloc(pdt->length);
+	if (pdt->image == NULL)
+	{
+		fprintf(stderr, _("Unable to malloc. Out of memory ?\n"));
+		fclose(fp);
+		perror(name);
+	}
+	
+	result = fread (pdt->image, sizeof(unsigned char), pdt->length, fp);
+	if (fp) fclose(fp);
+	
+	if (pdt->ro) 
+	{
+		fprintf(stderr, _("%s will be read only\n"), name);
+	}
+}
+
+void platform_disk_init(disk_t *disks) {
+        disk_open(&disks[0], floppyA);	
+        disk_open(&disks[1], floppyB);	
+        disk_open(&disks[2], floppyC);	
+        disk_open(&disks[3], floppyD);	
 }
