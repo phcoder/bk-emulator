@@ -157,7 +157,7 @@ int load_src(register pdp_regs *p, d_word *data);
 #define PDP_FULL_MEM_SIZE       (64 * 512)  /* 0 - 177777 */
 
 extern void line_init(void);
-void scr_init(void);
+void bk_scr_init(void);
 void boot_init(void);
 void timer_init(void);
 void printer_init(void);

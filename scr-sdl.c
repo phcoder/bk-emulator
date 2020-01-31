@@ -185,7 +185,7 @@ setup_bases() {
 }
 
 void
-scr_init() {
+bk_scr_init() {
 
     static char init_done = 0;
     int i;
