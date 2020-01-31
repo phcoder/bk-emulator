@@ -570,4 +570,6 @@ static inline enum joystick_state JOYSTICK_BUTTON(int idx) {
 
 void platform_disk_init(disk_t *disks);
 
+extern char * tape_prefix;
+
 #endif
