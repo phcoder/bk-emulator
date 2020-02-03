@@ -1,4 +1,4 @@
-CFLAGS += -Wall -Wno-switch -Wno-parentheses -Wno-format -Wno-unused-variable -Wno-unused-but-set-variable -Wextra -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes
+CFLAGS += -Wall -Wno-switch -Wno-parentheses -Wno-unused-variable -Wno-unused-but-set-variable -Wextra -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes
 
 SOURCES_C := $(CORE_DIR)/access.c $(CORE_DIR)/boot.c $(CORE_DIR)/branch.c \
 	$(CORE_DIR)/covox.c $(CORE_DIR)/double.c $(CORE_DIR)/ea.c \
