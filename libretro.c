@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <assert.h>
 
 static const char *const focal10rom = "FOCAL10.ROM";
 static const char *const basic10rom = "BASIC10.ROM"; 
@@ -576,4 +577,84 @@ void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_
 
 		return ret;
 	}
+}
+
+struct libretro_handle
+{
+	FILE *stdio;
+	struct retro_vfs_file_handle *lr;
+};
+
+struct libretro_handle *
+libretro_vfs_open(const char *filename, const char *mode)
+{
+	if (!vfs_interface) {
+		FILE *f = fopen(filename, mode);
+		if (!f)
+			return NULL;
+		struct libretro_handle *ret = malloc(sizeof(*ret));
+		assert(ret != NULL);
+		ret->stdio = f;
+		ret->lr = NULL;
+		return ret;
+	}
+
+	assert((mode[0] == 'r' || mode[0] == 'w') && mode[1] == '\0');
+
+	struct retro_vfs_file_handle *lr =
+		vfs_interface->open(filename, mode[0] == 'r'
+				    ? RETRO_VFS_FILE_ACCESS_READ
+				    : RETRO_VFS_FILE_ACCESS_WRITE,
+				    RETRO_VFS_FILE_ACCESS_HINT_NONE);
+	if (!lr)
+		return NULL;
+	struct libretro_handle *ret = malloc(sizeof(*ret));
+	assert(ret != NULL);
+	ret->stdio = NULL;
+	ret->lr = lr;
+	return ret;	
+}
+
+void libretro_vfs_close(struct libretro_handle *h)
+{
+	if (h->lr)
+		vfs_interface->close(h->lr);
+	if(h->stdio)
+		fclose(h->stdio);
+	free (h);
+}
+
+int libretro_vfs_getc(struct libretro_handle *h)
+{
+	if (h->lr) {
+		unsigned char c = 0;
+		int r;
+		r = vfs_interface->read(h->lr, &c, 1);
+		if (r != 1)
+			return -1;
+		return c;
+	}
+
+	return fgetc(h->stdio);
+}
+
+void libretro_vfs_putc(int c, struct libretro_handle *h)
+{
+	if (h->lr) {
+		unsigned char c0 = c;
+		vfs_interface->write(h->lr, &c0, 1);
+		return;
+	}
+
+	fputc(c, h->stdio);
+}
+
+int libretro_vfs_flush(struct libretro_handle *h)
+{
+	if (h->lr) {
+		vfs_interface->flush(h->lr);
+		return;
+	}
+
+	fflush(h->stdio);
 }
