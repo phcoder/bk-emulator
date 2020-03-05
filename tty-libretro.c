@@ -329,8 +329,9 @@ static RETRO_CALLCONV void keyboard_cb(bool down, unsigned keycode,
 }
 
 void
-tty_open() {
-  	struct retro_variable var;
+tty_set_keymap()
+{
+    	struct retro_variable var;
 	
 	var.key = "bk_layout";
 	var.value = NULL;
@@ -340,6 +341,10 @@ tty_open() {
 	} else {
 		current_keymap = &qwerty;
 	}
-  	struct retro_keyboard_callback cb = { keyboard_cb };
+}
+
+void
+tty_open() {
+  	static struct retro_keyboard_callback cb = { keyboard_cb };
 	environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
 }

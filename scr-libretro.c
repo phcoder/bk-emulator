@@ -103,9 +103,9 @@ void bk_scr_init() {
 /* * switches between color and B/W.
  */
 
-void scr_toggle_color () {
-    cflag = !cflag;
-    memset (dirty, 1, sizeof(dirty));
+void scr_mark_dirty () {
+	memset (dirty, 1, sizeof(dirty));
+	scr_dirty = sizeof(dirty);
 }
 
 static void
