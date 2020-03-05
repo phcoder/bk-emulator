@@ -23,7 +23,11 @@ d_word *word;
 	 * and 0300 for BK-0011
 	 */
 	*word = 0100000 | (bkmodel << 14) |
+#ifndef LIBRETRO
 		(telegraph_enabled ? serial_read() : 0200) |
+#else
+		0200 |
+#endif	  
 		key_pressed |
 		tape_bit |
 		io_stop_happened;
@@ -49,9 +53,11 @@ d_word word;
 	}
 	/* status, value */
 	tape_write((word >> 7) & 1, (word >> 6) & 1);
+#ifndef LIBRETRO
 	if (telegraph_enabled) {
 		serial_write(word);
 	}
+#endif
 	return OK;
 }
 
@@ -65,9 +71,11 @@ int io_bwrite(c_addr addr, d_byte byte) {
 		    io_sound_age = 0;
 	    }
 	    tape_write((byte >> 7) & 1, (byte >> 6) & 1);
+#ifndef LIBRETRO
 	    if (telegraph_enabled) {
 		    serial_write(byte);
 	    }
+#endif
 	} else if (bkmodel && byte & 010) {
 		pagereg_bwrite(byte);
 	}
