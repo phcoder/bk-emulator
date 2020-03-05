@@ -15,6 +15,7 @@ static const char *const basic10rom = "BASIC10.ROM";
 
 retro_log_printf_t log_cb;
 retro_video_refresh_t video_cb;
+struct retro_vfs_interface *vfs_interface;
 
 static retro_audio_sample_t audio_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
@@ -205,6 +206,12 @@ void retro_set_environment(retro_environment_t cb)
    };
 
    cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+
+   struct retro_vfs_interface_info vfs_interface_info;
+   vfs_interface_info.required_interface_version = 1;
+   vfs_interface_info.iface = NULL;
+   if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_interface_info))
+     vfs_interface = vfs_interface_info.iface;
 }
 
 void retro_set_audio_sample(retro_audio_sample_t cb)
@@ -575,3 +582,87 @@ void platform_sound_init() {
 void platform_disk_init(disk_t *disks) {
 }
 
+
+void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_sz)
+{
+	FILE * romf;
+
+	char *path = malloc(strlen(romdir)+strlen(rompath)+2);
+
+	if (!path) {
+		log_cb(RETRO_LOG_ERROR, "No memory");
+		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+		return NULL;
+	}
+
+	/* If rompath is a real path, do not apply romdir to it */
+	if (*romdir && !strchr(rompath, '/'))
+		sprintf(path, "%s/%s", romdir, rompath);
+	else
+		strcpy(path, rompath);
+
+	log_cb(RETRO_LOG_INFO, "Loading %s...", path);
+
+	char *ret = NULL;
+
+	if (vfs_interface)
+	{
+		struct retro_vfs_file_handle *romf = vfs_interface->open(
+			path,
+			RETRO_VFS_FILE_ACCESS_READ,
+			RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		
+		if (!romf) {
+			log_cb(RETRO_LOG_ERROR, "Couldn't open file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		size_t fsz = vfs_interface->size(romf);
+		if (fsz > max_sz)
+			fsz = max_sz;
+
+		if (fsz < min_sz) {
+			log_cb(RETRO_LOG_ERROR, "Incomplete or damaged file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		char *ret = malloc (fsz + 1);
+		vfs_interface->read(romf, ret, fsz);
+		vfs_interface->close(romf);
+		
+		*sz = fsz;
+
+		free(path);
+
+		return ret;
+	} else {
+		FILE * romf = fopen(path, "r");
+		if (!romf) {
+			log_cb(RETRO_LOG_ERROR, "Couldn't open file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		char *ret = malloc (max_sz);
+		int c, i;
+
+		while ((c = fgetc(romf)) >= 0)
+			ret[i++] = c;
+
+		fclose(romf);
+
+		if (i < min_sz) {
+			log_cb(RETRO_LOG_ERROR, "Incomplete or damaged file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		*sz = i;
+
+		free(path);
+
+		return ret;
+	}
+}
