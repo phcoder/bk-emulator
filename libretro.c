@@ -2,7 +2,7 @@
 #include "libretro.h"
 #include "conf.h"
 #include "tty.h"
-#include "libretro-vfs.h"
+#include "libretro-defs.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -224,7 +224,6 @@ static const int16_t zero_samples[MAX_SAMPLES_PER_FRAME * 2];
 static const void * game_data;
 static size_t game_size;
 static int hasgame = 0;
-void scr_mark_dirty ();
 
 static void update_variables(bool startup)
 {
