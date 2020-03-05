@@ -51,85 +51,10 @@ static void fallback_log(enum retro_log_level level, const char *fmt, ...)
 
 void retro_init(void)
 {
-
-  /*
-   char *savedir = NULL;
-
-   game_calculate_pitch();
-
-   game_init();
-
-   environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &savedir);
-
-   if (savedir)
-   {
-      FILE *fp;
-#ifdef _WIN32
-      char slash = '\\';
-#else
-      char slash = '/';
-#endif
-      char filename[1024] = {0};
-      sprintf(filename, "%s%c2048.srm", savedir, slash);
-
-      fp = fopen(filename, "rb");
-
-      if (fp)
-      {
-         fread(game_data(), game_data_size(), 1, fp);
-         fclose(fp);
-      }
-      else
-      {
-         if (log_cb)
-            log_cb(RETRO_LOG_WARN, "[2048] unable to load game data: %s.\n", strerror(errno));
-      }
-   }
-   else
-   {
-         if (log_cb)
-            log_cb(RETRO_LOG_WARN, "[2048] unable to load game data: save directory not set.\n");
-	    }*/
 }
 
 void retro_deinit(void)
 {
-  /*
-   char *savedir = NULL;
-   environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &savedir);
-
-   if (savedir)
-   {
-      FILE *fp;
-#ifdef _WIN32
-      char slash = '\\';
-#else
-      char slash = '/';
-#endif
-      char filename[1024] = {0};
-
-      sprintf(filename, "%s%c2048.srm", savedir, slash);
-      fp = fopen(filename, "wb");
-
-      if (fp)
-      {
-         fwrite(game_save_data(), game_data_size(), 1, fp);
-         fclose(fp);
-      }
-      else
-      {
-         if (log_cb)
-            log_cb(RETRO_LOG_WARN, "[2048] unable to save game data: %s.\n", strerror(errno));
-      }
-   }
-   else
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_WARN, "[2048] unable to save game data: save directory not set.\n");
-   }
-
-
-   game_deinit();*/
 }
 
 unsigned retro_api_version(void)
@@ -241,13 +166,7 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 
 void retro_reset(void)
 {
-  //   game_reset();
 }
-
-/*static void frame_time_cb(retro_usec_t usec)
-{
-   frame_time = usec / 1000000.0;
-   }*/
 
 #define MAX_SAMPLES_PER_FRAME 5000
 static const int16_t zero_samples[MAX_SAMPLES_PER_FRAME * 2];
@@ -539,20 +458,12 @@ bool retro_unserialize(const void *data_, size_t size)
 
 void *retro_get_memory_data(unsigned id)
 {
-  /*   if (id != RETRO_MEMORY_SAVE_RAM)
-      return NULL;
-
-      return game_data();*/
-  return NULL;
+	return NULL;
 }
 
 size_t retro_get_memory_size(unsigned id)
 {
-  /*   if (id != RETRO_MEMORY_SAVE_RAM)
-      return 0;
-
-      return game_data_size();*/
-  return 0;
+	return 0;
 }
 
 void retro_cheat_reset(void)
