@@ -649,7 +649,7 @@ void libretro_vfs_putc(int c, struct libretro_handle *h)
 	fputc(c, h->stdio);
 }
 
-int libretro_vfs_flush(struct libretro_handle *h)
+void libretro_vfs_flush(struct libretro_handle *h)
 {
 	if (h->lr) {
 		vfs_interface->flush(h->lr);
