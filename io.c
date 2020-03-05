@@ -79,12 +79,16 @@ int io_bwrite(c_addr addr, d_byte byte) {
 #define LINE_WST 0176564
 #define LINE_WDT 0176566
 
+#ifndef LIBRETRO
 FILE * irpslog = 0;
+#endif
 enum { IdleL, NameL, HeaderL, BodyL, TailL } lstate = 0;
 unsigned char rdbuf = 0;
 
 void line_init() {
+#ifndef LIBRETRO
 	irpslog = fopen("irps.log", "w");
+#endif
 }
 
 int line_read(addr, word)
@@ -131,7 +135,9 @@ int line_bwrite(addr, byte)
 c_addr addr;
 d_byte byte;
 {
+#ifndef LIBRETRO
 	fputc(byte, irpslog);
+#endif
 	switch (lstate) {
 	case IdleL:
 		switch (byte) {
