@@ -290,6 +290,8 @@ void retro_run(void)
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
 		update_variables(false);
 
+	input_poll_cb();
+
 	if (hasgame == 1 && framectr > 2)
 	{
 		hasgame = 0;
@@ -308,14 +310,16 @@ void retro_run(void)
 
 	if (joystick_enabled) {
 		int new_state = 0;
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A);
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) << 1;
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X) << 2;
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y) << 3;
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) << 4;
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) << 5;
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) << 9;
-		new_state |= !!input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) << 10;
+		for (int pad = 0; pad < 2; pad++) {
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A);
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) << 1;
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X) << 2;
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y) << 3;
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) << 4;
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) << 5;
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) << 9;
+			new_state |= !!input_state_cb(pad, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) << 10;
+		}
 		joystick_cur_state = new_state;
 	}
 
@@ -330,8 +334,6 @@ void retro_run(void)
 		  samplegoal = MAX_SAMPLES_PER_FRAME;
 	  audio_batch_cb(zero_samples, samplegoal);
   }
-
-  input_poll_cb();
 }
 
 static int game_init_pixelformat(void)
