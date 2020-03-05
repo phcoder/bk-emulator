@@ -125,7 +125,7 @@ void retro_set_environment(retro_environment_t cb)
       },
       {
 	      "bk_doublespeed",
-	      "Keyboard layout; disabled|enabled",
+	      "Double CPU speed; disabled|enabled",
       },
       { NULL, NULL },
    };
