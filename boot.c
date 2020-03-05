@@ -36,44 +36,19 @@
  */
 
 void load_rom(unsigned start, const char * rompath, unsigned min_size, unsigned max_size) {
-	char * path;
 	int i;
-	unsigned long saved_ram_map = pdp_ram_map;
-	FILE * romf;
 
 	if (!rompath || !*rompath) return;
-	path = malloc(strlen(romdir)+strlen(rompath)+2);
 
-	if (!path) { fprintf(stderr, _("No memory\n")); exit(1); }
-
-	/* If rompath is a real path, do not apply romdir to it */
-	if (*romdir && !strchr(rompath, '/'))
-		sprintf(path, "%s/%s", romdir, rompath);
-	else
-		strcpy(path, rompath);
-
-	fprintf(stderr, _("Loading %s..."), path);
-
-	romf = fopen(path, "r");
-	if (!romf) {
-		fprintf(stderr, _("Couldn't open file.\n"));
-		exit(1);
-	}
+	size_t sz;
+	unsigned char *romf = load_rom_file (rompath, &sz, min_size, max_size);
+	
+	unsigned long saved_ram_map = pdp_ram_map;
 	pdp_ram_map = ~0l;
-	for (i = 0; i < max_size/2; i++, start+=2) {
-		int lobyte = getc(romf);
-		int hibyte = getc(romf);
-		d_word data;
-		if (hibyte < 0) break;
-		data = lobyte | hibyte<<8;
-		sc_word(start, data);
+	for (i = 0; i < sz/2; i++, start+=2) {
+		sc_word(start, romf[2 * i] | romf[2 * i + 1]<<8);
 	}
-	if (i < min_size/2) {
-		fprintf(stderr, _("Incomplete or damaged file.\n"));
-		exit(1);
-	}
-	fclose(romf);
-	free(path);
+	free(romf);
         fprintf(stderr, _("Done.\n"));
 	pdp_ram_map = saved_ram_map;
 }
@@ -86,38 +61,14 @@ void load_rom11(d_word * rombuf, int byte_off, const char * rompath, int byte_si
 	int i;
 
 	if (!rompath || !*rompath) return;
-	path = malloc(strlen(romdir)+strlen(rompath)+2);
+	size_t sz;
+	unsigned char *romf = load_rom_file (rompath, &sz, byte_size, byte_size);
 
-	if (!path) { fprintf(stderr, _("No memory\n")); exit(1); }
-
-	/* If rompath is a real path, do not apply romdir to it */
-	if (*romdir && !strchr(rompath, '/'))
-		sprintf(path, "%s/%s", romdir, rompath);
-	else
-		strcpy(path, rompath);
-
-	fprintf(stderr, _("Loading %s..."), path);
-
-	FILE * romf = fopen(path, "r");
-	if (!romf) {
-		fprintf(stderr, _("Couldn't open file.\n"));
-		exit(1);
-	}
 	rombuf += byte_off/2;
 	for (i = 0; i < byte_size/2; i++, rombuf++) {
-		int lobyte = getc(romf);
-		int hibyte = getc(romf);
-		d_word data;
-		if (hibyte < 0) break;
-		data = lobyte | hibyte<<8;
-		*rombuf = data;
+		*rombuf = romf[2 * i] | romf[2 * i + 1]<<8;
 	}
-	if (i < byte_size/2) {
-		fprintf(stderr, _("Incomplete or damaged file.\n"));
-		exit(1);
-	}
-	fclose(romf);
-	free(path);
+	free(romf);
         fprintf(stderr, _("Done.\n"));
 }
 

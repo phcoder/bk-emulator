@@ -9,12 +9,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <assert.h>
 
 static const char *const focal10rom = "FOCAL10.ROM";
 static const char *const basic10rom = "BASIC10.ROM"; 
 
 retro_log_printf_t log_cb;
 retro_video_refresh_t video_cb;
+struct retro_vfs_interface *vfs_interface;
 
 static retro_audio_sample_t audio_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
@@ -50,85 +52,10 @@ static void fallback_log(enum retro_log_level level, const char *fmt, ...)
 
 void retro_init(void)
 {
-
-  /*
-   char *savedir = NULL;
-
-   game_calculate_pitch();
-
-   game_init();
-
-   environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &savedir);
-
-   if (savedir)
-   {
-      FILE *fp;
-#ifdef _WIN32
-      char slash = '\\';
-#else
-      char slash = '/';
-#endif
-      char filename[1024] = {0};
-      sprintf(filename, "%s%c2048.srm", savedir, slash);
-
-      fp = fopen(filename, "rb");
-
-      if (fp)
-      {
-         fread(game_data(), game_data_size(), 1, fp);
-         fclose(fp);
-      }
-      else
-      {
-         if (log_cb)
-            log_cb(RETRO_LOG_WARN, "[2048] unable to load game data: %s.\n", strerror(errno));
-      }
-   }
-   else
-   {
-         if (log_cb)
-            log_cb(RETRO_LOG_WARN, "[2048] unable to load game data: save directory not set.\n");
-	    }*/
 }
 
 void retro_deinit(void)
 {
-  /*
-   char *savedir = NULL;
-   environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &savedir);
-
-   if (savedir)
-   {
-      FILE *fp;
-#ifdef _WIN32
-      char slash = '\\';
-#else
-      char slash = '/';
-#endif
-      char filename[1024] = {0};
-
-      sprintf(filename, "%s%c2048.srm", savedir, slash);
-      fp = fopen(filename, "wb");
-
-      if (fp)
-      {
-         fwrite(game_save_data(), game_data_size(), 1, fp);
-         fclose(fp);
-      }
-      else
-      {
-         if (log_cb)
-            log_cb(RETRO_LOG_WARN, "[2048] unable to save game data: %s.\n", strerror(errno));
-      }
-   }
-   else
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_WARN, "[2048] unable to save game data: save directory not set.\n");
-   }
-
-
-   game_deinit();*/
 }
 
 unsigned retro_api_version(void)
@@ -199,12 +126,18 @@ void retro_set_environment(retro_environment_t cb)
       },
       {
 	      "bk_doublespeed",
-	      "Keyboard layout; disabled|enabled",
+	      "Double CPU speed; disabled|enabled",
       },
       { NULL, NULL },
    };
 
    cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+
+   struct retro_vfs_interface_info vfs_interface_info;
+   vfs_interface_info.required_interface_version = 1;
+   vfs_interface_info.iface = NULL;
+   if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_interface_info))
+     vfs_interface = vfs_interface_info.iface;
 }
 
 void retro_set_audio_sample(retro_audio_sample_t cb)
@@ -234,13 +167,7 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 
 void retro_reset(void)
 {
-  //   game_reset();
 }
-
-/*static void frame_time_cb(retro_usec_t usec)
-{
-   frame_time = usec / 1000000.0;
-   }*/
 
 #define MAX_SAMPLES_PER_FRAME 5000
 static const int16_t zero_samples[MAX_SAMPLES_PER_FRAME * 2];
@@ -532,20 +459,12 @@ bool retro_unserialize(const void *data_, size_t size)
 
 void *retro_get_memory_data(unsigned id)
 {
-  /*   if (id != RETRO_MEMORY_SAVE_RAM)
-      return NULL;
-
-      return game_data();*/
-  return NULL;
+	return NULL;
 }
 
 size_t retro_get_memory_size(unsigned id)
 {
-  /*   if (id != RETRO_MEMORY_SAVE_RAM)
-      return 0;
-
-      return game_data_size();*/
-  return 0;
+	return 0;
 }
 
 void retro_cheat_reset(void)
@@ -575,3 +494,167 @@ void platform_sound_init() {
 void platform_disk_init(disk_t *disks) {
 }
 
+
+void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_sz)
+{
+	FILE * romf;
+
+	char *path = malloc(strlen(romdir)+strlen(rompath)+2);
+
+	if (!path) {
+		log_cb(RETRO_LOG_ERROR, "No memory");
+		environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+		return NULL;
+	}
+
+	/* If rompath is a real path, do not apply romdir to it */
+	if (*romdir && !strchr(rompath, '/'))
+		sprintf(path, "%s/%s", romdir, rompath);
+	else
+		strcpy(path, rompath);
+
+	log_cb(RETRO_LOG_INFO, "Loading %s...", path);
+
+	char *ret = NULL;
+
+	if (vfs_interface)
+	{
+		struct retro_vfs_file_handle *romf = vfs_interface->open(
+			path,
+			RETRO_VFS_FILE_ACCESS_READ,
+			RETRO_VFS_FILE_ACCESS_HINT_NONE);
+		
+		if (!romf) {
+			log_cb(RETRO_LOG_ERROR, "Couldn't open file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		size_t fsz = vfs_interface->size(romf);
+		if (fsz > max_sz)
+			fsz = max_sz;
+
+		if (fsz < min_sz) {
+			log_cb(RETRO_LOG_ERROR, "Incomplete or damaged file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		char *ret = malloc (fsz + 1);
+		vfs_interface->read(romf, ret, fsz);
+		vfs_interface->close(romf);
+		
+		*sz = fsz;
+
+		free(path);
+
+		return ret;
+	} else {
+		FILE * romf = fopen(path, "r");
+		if (!romf) {
+			log_cb(RETRO_LOG_ERROR, "Couldn't open file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		char *ret = malloc (max_sz);
+		int c, i;
+
+		while ((c = fgetc(romf)) >= 0)
+			ret[i++] = c;
+
+		fclose(romf);
+
+		if (i < min_sz) {
+			log_cb(RETRO_LOG_ERROR, "Incomplete or damaged file.\n");
+			environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
+			return NULL;
+		}
+
+		*sz = i;
+
+		free(path);
+
+		return ret;
+	}
+}
+
+struct libretro_handle
+{
+	FILE *stdio;
+	struct retro_vfs_file_handle *lr;
+};
+
+struct libretro_handle *
+libretro_vfs_open(const char *filename, const char *mode)
+{
+	if (!vfs_interface) {
+		FILE *f = fopen(filename, mode);
+		if (!f)
+			return NULL;
+		struct libretro_handle *ret = malloc(sizeof(*ret));
+		assert(ret != NULL);
+		ret->stdio = f;
+		ret->lr = NULL;
+		return ret;
+	}
+
+	assert((mode[0] == 'r' || mode[0] == 'w') && mode[1] == '\0');
+
+	struct retro_vfs_file_handle *lr =
+		vfs_interface->open(filename, mode[0] == 'r'
+				    ? RETRO_VFS_FILE_ACCESS_READ
+				    : RETRO_VFS_FILE_ACCESS_WRITE,
+				    RETRO_VFS_FILE_ACCESS_HINT_NONE);
+	if (!lr)
+		return NULL;
+	struct libretro_handle *ret = malloc(sizeof(*ret));
+	assert(ret != NULL);
+	ret->stdio = NULL;
+	ret->lr = lr;
+	return ret;	
+}
+
+void libretro_vfs_close(struct libretro_handle *h)
+{
+	if (h->lr)
+		vfs_interface->close(h->lr);
+	if(h->stdio)
+		fclose(h->stdio);
+	free (h);
+}
+
+int libretro_vfs_getc(struct libretro_handle *h)
+{
+	if (h->lr) {
+		unsigned char c = 0;
+		int r;
+		r = vfs_interface->read(h->lr, &c, 1);
+		if (r != 1)
+			return -1;
+		return c;
+	}
+
+	return fgetc(h->stdio);
+}
+
+void libretro_vfs_putc(int c, struct libretro_handle *h)
+{
+	if (h->lr) {
+		unsigned char c0 = c;
+		vfs_interface->write(h->lr, &c0, 1);
+		return;
+	}
+
+	fputc(c, h->stdio);
+}
+
+int libretro_vfs_flush(struct libretro_handle *h)
+{
+	if (h->lr) {
+		vfs_interface->flush(h->lr);
+		return;
+	}
+
+	fflush(h->stdio);
+}

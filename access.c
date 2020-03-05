@@ -115,9 +115,11 @@ pdp_qmap qmap_terak[] = {
 
 pdp_qmap * qmap = qmap_bk;
 
+#ifndef LIBRETRO
 pdp_qmap q_printer = {
 	PORT_REG, PORT_SIZE, printer_init, printer_read, printer_write, printer_bwrite
 };
+#endif
 
 pdp_qmap q_mouse = {
 	PORT_REG, PORT_SIZE, mouse_init, mouse_read, mouse_write, mouse_bwrite
@@ -140,7 +142,9 @@ pdp_qmap q_joystick = {
 };
 
 void plug_joystick() { qmap[0] = q_joystick; }
+#ifndef LIBRETRO
 void plug_printer() { qmap[0] = q_printer; }
+#endif
 void plug_mouse() { qmap[0] = q_mouse; }
 void plug_covox() { qmap[0] = q_covox; }
 void plug_synth() { qmap[0] = q_synth; }
