@@ -369,8 +369,9 @@ static int game_init_pixelformat(void)
 bool retro_load_game(const struct retro_game_info *info)
 {
 	if (info && info->data) {
-                game_data = malloc(info->size);
-                memcpy (game_data, info->data, info->size);
+		void *gd = malloc(info->size);
+                game_data = gd;
+                memcpy (gd, info->data, info->size);
                 game_size = info->size;
 		hasgame = 1;
 	}
