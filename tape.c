@@ -205,7 +205,7 @@ void fake_read_strobe() {
 	static unsigned char curbyte;
 	static unsigned curlen;
 	static unsigned curaddr;
-	int bit;
+	int bit = 0;
 	if (fake_state == Idle && !tape_read_file) {
 		/* First time here, find which file to open */
 		get_emt36_filename();

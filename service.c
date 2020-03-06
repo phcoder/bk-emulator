@@ -68,7 +68,7 @@ void ev_register(unsigned priority, int (*handler)(d_word),
 void ev_fire( int priority )
 {
 	int x;
-	unsigned long mask;
+	unsigned long mask = 0;
 	switch (priority) {
 		case 0: mask = ~0; break;
 		case 1: mask = ~0; break;
