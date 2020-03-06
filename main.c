@@ -349,7 +349,7 @@ void load_and_run(FILE *f) {
 }
 
 
-static int load_bin(unsigned char *data, size_t sz) {
+static int load_bin(const unsigned char *data, size_t sz) {
   	int ptr;
 
         if (sz < 4)
@@ -371,6 +371,6 @@ static int load_bin(unsigned char *data, size_t sz) {
 	return addr;
 }
 
-void load_and_run_bin(void *data, size_t sz) {
+void load_and_run_bin(const void *data, size_t sz) {
         run_game(load_bin(data, sz));
 }
