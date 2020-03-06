@@ -1,6 +1,7 @@
 #include "defines.h"
 #include "scr.h"
 #include "intl.h"
+#include "libretro-defs.h"
 
 #define HOR 512
 #define VERT 512
