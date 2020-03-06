@@ -390,9 +390,13 @@ bool retro_load_game(const struct retro_game_info *info)
 
 	/* Set ROM configuration */
 
-	if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir)
+	if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir && dir[0])
 	{
-		romdir = strdup(dir);
+		char *cd = malloc (strlen(dir) + 20);
+		assert(cd != NULL);
+		strcpy(cd, dir);
+		strcat(cd, "/bk");
+		romdir = cd;
 	}
 
 	update_variables(true);
