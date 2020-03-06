@@ -106,8 +106,7 @@ void ev_fire( int priority )
  */
 
 int
-service( vector )
-d_word vector;
+service( d_word vector )
 {
 	register pdp_regs *p = &pdp;
 	int result;
