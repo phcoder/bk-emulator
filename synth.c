@@ -1,8 +1,5 @@
 #include "defines.h"
 #include "emu2149.h"
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
 
 unsigned char synth_reg;
 #define SOUND_FREQ 44100

@@ -1,10 +1,5 @@
 #include "defines.h"
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
 #include "intl.h"
-#include <unistd.h>
 
 /* Terak floppy images are 128*26*76 = 252928 bytes, single-sided */
 #define SECSIZE 64 /* words */

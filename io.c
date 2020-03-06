@@ -1,7 +1,4 @@
 #include "defines.h"
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
 /* #include <linux/soundcard.h> */
 #include "intl.h"
 
