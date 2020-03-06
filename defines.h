@@ -574,5 +574,6 @@ extern char * tape_prefix;
 
 void load_and_run_bin(const void *data, size_t sz);
 void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_sz);
+int load_file(FILE *f, int addr);
 
 #endif
