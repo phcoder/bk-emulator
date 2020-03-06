@@ -35,7 +35,6 @@ d_word *word;
 /* Include tape drive relay into sound as well */
 int io_write(c_addr addr, d_word word)
 {
-	d_word offset = addr - IO_REG;
 	unsigned oldval = io_sound_val;
 	if (bkmodel && word & 04000) {
 		pagereg_write(word);
