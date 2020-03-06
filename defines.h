@@ -188,7 +188,7 @@ extern int covox_read(c_addr addr, d_word *word);
 extern int covox_write(c_addr, d_word), covox_bwrite(c_addr, d_byte);
 extern int synth_read(c_addr addr, d_word *word), synth_write(c_addr, d_word), synth_bwrite(c_addr, d_byte), synth_next(void);
 extern int bkplip_read(c_addr addr, d_word *word), bkplip_write(c_addr, d_word), bkplip_bwrite(c_addr, d_byte);
-extern int service(d_word);
+extern int service(d_word vector);
 unsigned short *get_vram_line (int bufno, int line);
 void tape_read_start(void);
 void tape_read_finish(void);

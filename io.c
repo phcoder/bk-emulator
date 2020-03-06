@@ -33,9 +33,7 @@ d_word *word;
 }
 
 /* Include tape drive relay into sound as well */
-int io_write(addr, word)
-c_addr addr;
-d_word word;
+int io_write(c_addr addr, d_word word)
 {
 	d_word offset = addr - IO_REG;
 	unsigned oldval = io_sound_val;
@@ -116,9 +114,7 @@ d_word *word;
 	return OK;
 }
 
-int line_write(addr, word)
-c_addr addr;
-d_word word;
+int line_write(c_addr addr,d_word word)
 {
 	switch (addr) {
 	case LINE_WDT:
@@ -136,9 +132,7 @@ d_word word;
 int subcnt;
 unsigned char fname[11];
 unsigned short file_addr, file_len;
-int line_bwrite(addr, byte)
-c_addr addr;
-d_byte byte;
+int line_bwrite(c_addr addr, d_byte byte)
 {
 #ifndef LIBRETRO
 	fputc(byte, irpslog);

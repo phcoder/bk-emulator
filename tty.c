@@ -89,9 +89,7 @@ d_word *word;
  */
 
 int
-tty_write( addr, word )
-c_addr addr;
-d_word word;
+tty_write(c_addr addr, d_word word )
 {
 	d_word offset = addr & 07;
 	d_word old_scroll;
@@ -132,9 +130,7 @@ d_word word;
  */
 
 int
-tty_bwrite( addr, byte )
-c_addr addr;
-d_byte byte;
+tty_bwrite(c_addr addr, d_byte byte )
 {
 	d_word offset = addr & 07;
 	d_word old_scroll;

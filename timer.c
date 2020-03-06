@@ -38,9 +38,7 @@ d_word *word;
 	return OK;
 }
 
-int timer_write(addr, word)
-c_addr addr;
-d_word word;
+int timer_write(c_addr addr, d_word word)
 {
 	d_word offset = addr - TIMER_REG;
 	switch(offset) {
@@ -62,9 +60,7 @@ d_word word;
 	return OK;
 }
 
-int timer_bwrite(addr, byte)
-c_addr addr;
-d_byte byte;
+int timer_bwrite(c_addr addr, d_byte byte)
 {
 	d_word offset = addr - TIMER_REG;
 	switch(offset) {
