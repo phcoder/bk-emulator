@@ -438,7 +438,8 @@ bool retro_load_game(const struct retro_game_info *info)
 	sim_init();		/* ...the simulated cpu */
 	mem_init();		/* ...main memory */
 	bk_scr_init();		/* video display */
-	boot_init();		/* ROM blocks */
+	if (!boot_init())
+	  return false;		/* ROM blocks */
 	q_reset();             /* ...any devices */
 
 	mouseflag = 0;
@@ -575,7 +576,7 @@ void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_
 	else
 		strcpy(path, rompath);
 
-	log_cb(RETRO_LOG_INFO, "Loading %s...", path);
+	log_cb(RETRO_LOG_INFO, "Loading %s...\n", path);
 
 	char *ret = NULL;
 
