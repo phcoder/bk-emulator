@@ -69,7 +69,7 @@ pdp_qmap qmap_bk[] = {
 	{ 0, 0, 0, 0, 0, 0 }
 };
 
-int tcons_read(c_addr a, d_word *d) {
+static int tcons_read(c_addr a, d_word *d) {
 	switch (a & 077) {
 	case 064:
 		*d = 0200;
@@ -82,7 +82,7 @@ int tcons_read(c_addr a, d_word *d) {
 	return OK;
 }
 
-int tcons_write(c_addr a, d_word d) {
+static int tcons_write(c_addr a, d_word d) {
 	switch (a & 077) {
 	case 064:
 		fprintf(stderr, "Writing %06lo: %06o\n", a, d);
@@ -98,7 +98,7 @@ int tcons_write(c_addr a, d_word d) {
 	return OK;
 }
 
-int tcons_writeb(c_addr a, unsigned char d) {
+static int tcons_writeb(c_addr a, unsigned char d) {
         return tcons_write(a, d);
 }
 

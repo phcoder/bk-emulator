@@ -134,7 +134,7 @@ static char unix_filename[17];
  * Returns the raw 16-byte file name in bk_filename,
  * and the name with trimmed trailing spaces in unix_filename.
  */
-void
+static void
 get_emt36_filename() {
 	int i;
 	d_word base;
