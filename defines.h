@@ -214,7 +214,7 @@ typedef struct _event {
  * Instruction Table for Fast Decode.
  */
 
-typedef int (*_itab_t)();
+typedef int (*_itab_t)(register pdp_regs *p);
 
 
 /*

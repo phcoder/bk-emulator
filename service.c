@@ -12,6 +12,7 @@
 
 #include "defines.h"
 #include "intl.h"
+#include "ops.h"
 
 
 /* Allows up to 32 different HW interrupts,
