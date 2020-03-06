@@ -186,14 +186,14 @@ d_byte byte;
  * tty_finish()
  */
 
-int tty_finish( d_word c )
+static int tty_finish( d_word c )
 {
 	service(( c & 0200 ) ? TTY_VECTOR2 : TTY_VECTOR);
 	tty_pending_int = 0;
 	return OK;
 }
 
-void stop_key() {
+static void stop_key() {
     io_stop_happened = 4;
     service(04);
 }

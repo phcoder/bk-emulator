@@ -35,7 +35,7 @@
  * Used for BK-0010 style ROM - stores into the mapped memory.
  */
 
-int load_rom(unsigned start, const char * rompath, unsigned min_size, unsigned max_size) {
+static int load_rom(unsigned start, const char * rompath, unsigned min_size, unsigned max_size) {
 	int i;
 
 	if (!rompath || !*rompath) return 1;
@@ -61,8 +61,7 @@ int load_rom(unsigned start, const char * rompath, unsigned min_size, unsigned m
 /*
  * Loads BK-0011 ROM into the givem ROM block from a given offset.
  */
-int load_rom11(d_word * rombuf, int byte_off, const char * rompath, int byte_size) {
-	char * path;
+static int load_rom11(d_word * rombuf, int byte_off, const char * rompath, int byte_size) {
 	int i;
 
 	if (!rompath || !*rompath) return 1;

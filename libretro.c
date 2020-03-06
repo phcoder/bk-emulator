@@ -64,7 +64,7 @@ unsigned retro_api_version(void)
    return RETRO_API_VERSION;
 }
 
-void
+static void
 set_input_descs(void)
 {
 	   	static struct retro_input_descriptor desc[] = {
