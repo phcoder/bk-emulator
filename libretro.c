@@ -561,8 +561,6 @@ void platform_disk_init(disk_t *disks) {
 
 void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_sz)
 {
-	FILE * romf;
-
 	char *path = malloc(strlen(romdir)+strlen(rompath)+2);
 
 	if (!path) {
@@ -578,8 +576,6 @@ void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_
 		strcpy(path, rompath);
 
 	log_cb(RETRO_LOG_INFO, "Loading %s...\n", path);
-
-	char *ret = NULL;
 
 	if (vfs_interface)
 	{

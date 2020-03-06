@@ -115,10 +115,8 @@ service( d_word vector )
 	d_word oldpc;
 	d_word newpsw;
 	d_word newpc;
-	d_word oldmode;
 
 	last_branch = p->regs[PC];
-	oldmode = ( p->psw & 0140000 ) >> 14;
 
 	oldpsw = p->psw;
 	oldpc = p->regs[PC];
