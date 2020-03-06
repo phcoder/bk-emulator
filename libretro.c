@@ -64,10 +64,38 @@ unsigned retro_api_version(void)
    return RETRO_API_VERSION;
 }
 
+void
+set_input_descs(void)
+{
+	   	static struct retro_input_descriptor desc[] = {
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "Left" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,    "Up" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,  "Down" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT, "Right" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A, "1" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B, "2" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X, "3" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y, "4" },
+
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "Left" },
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,    "Up" },
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,  "Down" },
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT, "Right" },
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A, "1" },
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B, "2" },
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X, "3" },
+		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y, "4" },
+		{ 0 },
+	};
+
+	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
+}
+
 void retro_set_controller_port_device(unsigned port, unsigned device)
 {
-   (void)port;
-   (void)device;
+	(void)port;
+	(void)device;
+	set_input_descs();
 }
 
 void retro_get_system_info(struct retro_system_info *info)
@@ -144,19 +172,7 @@ void retro_set_environment(retro_environment_t cb)
 	if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_interface_info))
 		vfs_interface = vfs_interface_info.iface;
 
-   	static struct retro_input_descriptor desc[] = {
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "Left" },
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,    "Up" },
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,  "Down" },
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT, "Right" },
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A, "1" },
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B, "2" },
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X, "3" },
-		{ 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y, "4" },
-		{ 0 },
-	};
-
-	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
+	set_input_descs();
 
 	static const struct retro_controller_description port_user[] = {
 		{ "None",              RETRO_DEVICE_NONE },
@@ -167,6 +183,7 @@ void retro_set_environment(retro_environment_t cb)
 
 	static const struct retro_controller_description port_kbd[] = {
 		{ "Keyboard",         RETRO_DEVICE_KEYBOARD },
+		{ "Joystick",          RETRO_DEVICE_JOYPAD },
 		{ 0 },
 	};
 
@@ -174,7 +191,7 @@ void retro_set_environment(retro_environment_t cb)
 	{
 		{
 			.types = port_kbd,
-			.num_types = 1
+			.num_types = 2
 		},
 		{
 			.types = port_user,
