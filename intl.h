@@ -1,4 +1,4 @@
-#ifdef __ANDROID__
+#ifdef LIBRETRO
 #define _(x) (x)
 #define gettext(x) (x)
 #else
