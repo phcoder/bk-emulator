@@ -1,7 +1,4 @@
 #include "defines.h"
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
 /* #include <linux/soundcard.h> */
 #include "intl.h"
 
@@ -23,7 +20,11 @@ d_word *word;
 	 * and 0300 for BK-0011
 	 */
 	*word = 0100000 | (bkmodel << 14) |
+#ifndef LIBRETRO
 		(telegraph_enabled ? serial_read() : 0200) |
+#else
+		0200 |
+#endif	  
 		key_pressed |
 		tape_bit |
 		io_stop_happened;
@@ -49,9 +50,11 @@ d_word word;
 	}
 	/* status, value */
 	tape_write((word >> 7) & 1, (word >> 6) & 1);
+#ifndef LIBRETRO
 	if (telegraph_enabled) {
 		serial_write(word);
 	}
+#endif
 	return OK;
 }
 
@@ -65,9 +68,11 @@ int io_bwrite(c_addr addr, d_byte byte) {
 		    io_sound_age = 0;
 	    }
 	    tape_write((byte >> 7) & 1, (byte >> 6) & 1);
+#ifndef LIBRETRO
 	    if (telegraph_enabled) {
 		    serial_write(byte);
 	    }
+#endif
 	} else if (bkmodel && byte & 010) {
 		pagereg_bwrite(byte);
 	}
@@ -79,12 +84,16 @@ int io_bwrite(c_addr addr, d_byte byte) {
 #define LINE_WST 0176564
 #define LINE_WDT 0176566
 
+#ifndef LIBRETRO
 FILE * irpslog = 0;
+#endif
 enum { IdleL, NameL, HeaderL, BodyL, TailL } lstate = 0;
 unsigned char rdbuf = 0;
 
 void line_init() {
+#ifndef LIBRETRO
 	irpslog = fopen("irps.log", "w");
+#endif
 }
 
 int line_read(addr, word)
@@ -131,7 +140,9 @@ int line_bwrite(addr, byte)
 c_addr addr;
 d_byte byte;
 {
+#ifndef LIBRETRO
 	fputc(byte, irpslog);
+#endif
 	switch (lstate) {
 	case IdleL:
 		switch (byte) {

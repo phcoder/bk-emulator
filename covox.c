@@ -1,7 +1,4 @@
 #include "defines.h"
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
 #include "intl.h"
 
 void covox_init() {

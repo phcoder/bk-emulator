@@ -592,3 +592,44 @@ void platform_disk_init(disk_t *disks) {
         disk_open(&disks[2], floppyC);	
         disk_open(&disks[3], floppyD);	
 }
+
+void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_sz)
+{
+	FILE * romf;
+
+	char *path = malloc(strlen(romdir)+strlen(rompath)+2);
+
+	if (!path) { fprintf(stderr, _("No memory\n")); exit(1); }
+
+	/* If rompath is a real path, do not apply romdir to it */
+	if (*romdir && !strchr(rompath, '/'))
+		sprintf(path, "%s/%s", romdir, rompath);
+	else
+		strcpy(path, rompath);
+
+	fprintf(stderr, _("Loading %s..."), path);
+
+	romf = fopen(path, "r");
+	if (!romf) {
+		fprintf(stderr, _("Couldn't open file.\n"));
+		exit(1);
+	}
+
+	char *ret = malloc (max_sz);
+	int c, i;
+
+	while ((c = fgetc(romf)) >= 0)
+		ret[i++] = c;
+
+	fclose(romf);
+	free(path);
+
+	if (i < min_sz) {
+		fprintf(stderr, _("Incomplete or damaged file.\n"));
+		exit(1);
+	}
+
+	*sz = i;
+
+	return ret;
+}

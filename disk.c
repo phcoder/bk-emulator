@@ -1,8 +1,4 @@
 #include "defines.h"
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
 #include "intl.h"
 
 /* let's operate on 819200 byte images first */

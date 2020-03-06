@@ -1,7 +1,21 @@
 #include "defines.h"
+
+#ifdef LIBRETRO
+#include <assert.h>
+#include "libretro-defs.h"
+#define popen(cmd, mode) (assert(0), NULL)
+#define pclose(f) assert(0)
+#define FILE struct libretro_handle
+#define fopen libretro_vfs_open
+#define fclose libretro_vfs_close
+#define fgetc libretro_vfs_getc
+#define fputc libretro_vfs_putc
+#define fflush libretro_vfs_flush
+#else
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
+#endif
 #include "intl.h"
 
 unsigned char tape_read_val = 1, tape_write_val = 0;

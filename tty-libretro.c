@@ -286,12 +286,16 @@ static const struct keymap jcuken = {
 };
 
 static const struct keymap *current_keymap = &qwerty;
+static bool curstate[RETROK_LAST];
 
 static RETRO_CALLCONV void keyboard_cb(bool down, unsigned keycode,
       uint32_t character, uint16_t mod)
 {
 	if (keycode >= RETROK_LAST)
 		return;
+	if (curstate[keycode] == down)
+		return;
+	curstate[keycode] = down;
 	if (keycode == RETROK_LSUPER || keycode == RETROK_LALT) {
 		ar2 = down;
 		return;
@@ -329,8 +333,9 @@ static RETRO_CALLCONV void keyboard_cb(bool down, unsigned keycode,
 }
 
 void
-tty_open() {
-  	struct retro_variable var;
+tty_set_keymap()
+{
+    	struct retro_variable var;
 	
 	var.key = "bk_layout";
 	var.value = NULL;
@@ -340,6 +345,10 @@ tty_open() {
 	} else {
 		current_keymap = &qwerty;
 	}
-  	struct retro_keyboard_callback cb = { keyboard_cb };
+}
+
+void
+tty_open() {
+  	static struct retro_keyboard_callback cb = { keyboard_cb };
 	environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
 }
