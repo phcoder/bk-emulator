@@ -390,9 +390,13 @@ bool retro_load_game(const struct retro_game_info *info)
 
 	/* Set ROM configuration */
 
-	if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir)
+	if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir && dir[0])
 	{
-		romdir = strdup(dir);
+		char *cd = malloc (strlen(dir) + 20);
+		assert(cd != NULL);
+		strcpy(cd, dir);
+		strcat(cd, "/bk");
+		romdir = cd;
 	}
 
 	update_variables(true);
@@ -434,7 +438,8 @@ bool retro_load_game(const struct retro_game_info *info)
 	sim_init();		/* ...the simulated cpu */
 	mem_init();		/* ...main memory */
 	bk_scr_init();		/* video display */
-	boot_init();		/* ROM blocks */
+	if (!boot_init())
+	  return false;		/* ROM blocks */
 	q_reset();             /* ...any devices */
 
 	mouseflag = 0;
@@ -571,7 +576,7 @@ void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_
 	else
 		strcpy(path, rompath);
 
-	log_cb(RETRO_LOG_INFO, "Loading %s...", path);
+	log_cb(RETRO_LOG_INFO, "Loading %s...\n", path);
 
 	char *ret = NULL;
 
