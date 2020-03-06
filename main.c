@@ -98,7 +98,9 @@ addtocybuf(int val) {
 
 int
 run_cpu_until(register pdp_regs *p, long long max_ticks) {
+#ifndef LIBRETRO
 	static char buf[80];
+#endif
 
 	while (ticks < max_ticks) {
 		d_word oldpc;
@@ -112,12 +114,14 @@ run_cpu_until(register pdp_regs *p, long long max_ticks) {
 		/*
 		 * Fetch and execute the instruction.
 		 */
-	
+
+#ifndef LIBRETRO
 		if (traceflag) {
 			disas(p->regs[PC], buf);
 			if (tracefile) fprintf(tracefile, "%s\t%s\n", buf, state(p));
 			else printf("%s\n", buf);
 		}
+#endif
 		result = ll_word( p, p->regs[PC], &p->ir );
 		oldpc = p->regs[PC];
 		p->regs[PC] += 2;
