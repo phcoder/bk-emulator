@@ -35,7 +35,7 @@ d_word * pagemap[4] = { ram[6], ram[1], rom[0], system_rom };
 /*
  * The QBUS memory map.
  */
-static void q_null();
+static void q_null(void);
 int q_err(c_addr, d_word), q_errb(c_addr, d_byte),
  port_read(c_addr, d_word*), port_write(c_addr, d_word), port_bwrite(c_addr, d_byte);
 int secret_read(c_addr, d_word*), secret_write(c_addr, d_word), secret_bwrite(c_addr, d_byte);

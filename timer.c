@@ -15,7 +15,7 @@
  */
 #define PERIOD	128 
 
-static void timer_check();
+static void timer_check(void);
 static void timer_setmode(d_byte mode);
 
 int timer_read(addr, word)
