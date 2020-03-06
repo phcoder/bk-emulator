@@ -550,8 +550,8 @@ extern int cybuf[1024];
 extern int cybufidx;
 void ui_download(void);
 void intr_hand(void);
-d_word platform_joystick_get_state();
-void platform_joystick_init();
+d_word platform_joystick_get_state(void);
+void platform_joystick_init(void);
 
 enum joystick_state {
   JOYSTICK_BUTTON1 = 0x1,
