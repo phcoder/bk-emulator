@@ -144,6 +144,7 @@ run_cpu_until(register pdp_regs *p, long long max_ticks) {
 			switch( result ) {
 			case BUS_ERROR:			/* vector 4 */
 				ticks += 64;
+				/* Fallthrough */
 			case ODD_ADDRESS:
 				fprintf( stderr, _(" pc=%06o, last branch @ %06o\n"),
 					oldpc, last_branch );
