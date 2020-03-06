@@ -2,7 +2,7 @@
 
 #ifdef LIBRETRO
 #include <assert.h>
-#include "libretro-vfs.h"
+#include "libretro-defs.h"
 #define popen(cmd, mode) (assert(0), NULL)
 #define pclose(f) assert(0)
 #define FILE struct libretro_handle
