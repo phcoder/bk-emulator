@@ -64,7 +64,7 @@ unsigned retro_api_version(void)
    return RETRO_API_VERSION;
 }
 
-void
+static void
 set_input_descs(void)
 {
 	   	static struct retro_input_descriptor desc[] = {
@@ -369,8 +369,9 @@ static int game_init_pixelformat(void)
 bool retro_load_game(const struct retro_game_info *info)
 {
 	if (info && info->data) {
-                game_data = malloc(info->size);
-                memcpy (game_data, info->data, info->size);
+		void *gd = malloc(info->size);
+                game_data = gd;
+                memcpy (gd, info->data, info->size);
                 game_size = info->size;
 		hasgame = 1;
 	}
@@ -560,8 +561,6 @@ void platform_disk_init(disk_t *disks) {
 
 void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_sz)
 {
-	FILE * romf;
-
 	char *path = malloc(strlen(romdir)+strlen(rompath)+2);
 
 	if (!path) {
@@ -577,8 +576,6 @@ void *load_rom_file(const char * rompath, size_t *sz, size_t min_sz, size_t max_
 		strcpy(path, rompath);
 
 	log_cb(RETRO_LOG_INFO, "Loading %s...\n", path);
-
-	char *ret = NULL;
 
 	if (vfs_interface)
 	{
