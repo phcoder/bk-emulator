@@ -522,6 +522,8 @@ fpic=
 SHARED=
 endif
 
+CFLAGS += -Wall -Wno-switch -Wno-parentheses -Wno-unused-variable -Wno-unused-but-set-variable -Wextra -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes -DLIBRETRO=1
+
 ifeq ($(DEBUG), 1)
 ifneq (,$(findstring msvc,$(platform)))
 	ifeq ($(STATIC_LINKING),1)
