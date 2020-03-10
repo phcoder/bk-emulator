@@ -137,7 +137,7 @@ else ifeq ($(platform), psp1)
    AR = psp-ar$(EXE_EXT)
    CFLAGS += -DPSP -G0
    CXXFLAGS += -DPSP -G0
-   CFLAGS += -I$(shell psp-config --pspsdk-path)/include -std=gnu11
+   CFLAGS += -I$(shell psp-config --pspsdk-path)/include -std=gnu99
    STATIC_LINKING = 1
 # QNX
 else ifeq ($(platform), qnx)
