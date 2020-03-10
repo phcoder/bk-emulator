@@ -132,12 +132,12 @@ LIBRARY_NAME = $(TARGET_NAME)_libretro_ios
 else ifeq ($(platform), psp1)
    EXT?=a
    TARGET := $(TARGET_NAME)_libretro_$(platform).$(EXT)
-   CC = psp-gcc
-   CXX = psp-g++
-   AR = psp-ar
+   CC = psp-gcc$(EXE_EXT)
+   CXX = psp-g++$(EXE_EXT)
+   AR = psp-ar$(EXE_EXT)
    CFLAGS += -DPSP -G0
    CXXFLAGS += -DPSP -G0
-   CFLAGS += -I$(shell psp-config --pspsdk-path)/include
+   CFLAGS += -I$(shell psp-config --pspsdk-path)/include -std=gnu11
    STATIC_LINKING = 1
 # QNX
 else ifeq ($(platform), qnx)
@@ -190,15 +190,6 @@ else ifeq ($(platform), ps2)
    AR = ee-ar$(EXE_EXT)
    PLATFORM_DEFINES := -DPS2 -G0
    CFLAGS := -Ips2
-   STATIC_LINKING = 1
-
-# PSP
-else ifeq ($(platform), psp1)
-	EXT=a
-   TARGET := $(TARGET_NAME)_libretro_$(platform).$(EXT)
-   CC = psp-gcc$(EXE_EXT)
-   AR = psp-ar$(EXE_EXT)
-   PLATFORM_DEFINES := -DPSP -G0
    STATIC_LINKING = 1
 
 # Vita
