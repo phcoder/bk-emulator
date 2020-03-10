@@ -129,6 +129,16 @@ include $(THEOS)/makefiles/common.mk
 
 LIBRARY_NAME = $(TARGET_NAME)_libretro_ios
 
+else ifeq ($(platform), psp1)
+   EXT?=a
+   TARGET := $(TARGET_NAME)_libretro_$(platform).$(EXT)
+   CC = psp-gcc
+   CXX = psp-g++
+   AR = psp-ar
+   CFLAGS += -DPSP -G0
+   CXXFLAGS += -DPSP -G0
+   CFLAGS += -I$(shell psp-config --pspsdk-path)/include
+   STATIC_LINKING = 1
 # QNX
 else ifeq ($(platform), qnx)
 	EXT?=so
